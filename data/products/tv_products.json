@@ -1,0 +1,293 @@
+[
+  {
+    "product_id": "tv_001",
+    "category": "电视",
+    "model": "TCL 55Q10G Pro",
+    "series": "QD-Mini LED系列",
+    "brand": "TCL",
+    "basic_params": {
+      "size": "55英寸",
+      "resolution": "4K (3840x2160)",
+      "price_range": "5000-6000元",
+      "release_year": "2024",
+      "screen_type": "液晶电视"
+    },
+    "tech_params": {
+      "backlight": "Mini LED",
+      "led_count": "数百个Mini LED灯珠",
+      "color_tech": "量子点技术(QD)",
+      "color_gamut": "157% BT.709",
+      "refresh_rate": "120Hz",
+      "hdr_standard": "HDR 1000",
+      "peak_brightness": "1000尼特",
+      "contrast_ratio": "超高对比度(百万级)",
+      "response_time": "6ms",
+      "viewing_angle": "178度"
+    },
+    "smart_features": [
+      "AI画质优化引擎",
+      "杜比全景声(Dolby Atmos)",
+      "智能语音控制(远场语音)",
+      "MEMC运动补偿",
+      "防眩光技术",
+      "护眼模式"
+    ],
+    "interface": [
+      "HDMI 2.1 x3 (支持4K 120Hz输入)",
+      "USB 3.0 x2",
+      "网络接口",
+      "光纤音频输出",
+      "耳机接口"
+    ],
+    "suitable_for": [
+      "观影追剧(高画质需求)",
+      "游戏娱乐(高刷新率)",
+      "客厅使用(55寸适中)",
+      "HDR视频播放"
+    ],
+    "target_users": [
+      "追求高画质用户",
+      "游戏玩家",
+      "Netflix/爱奇艺重度用户",
+      "预算5000-6000元"
+    ],
+    "pros": [
+      "Mini LED背光技术，对比度出色",
+      "量子点广色域，色彩还原准确",
+      "120Hz高刷，游戏体验流畅",
+      "性价比高，同价位画质领先"
+    ],
+    "cons": [
+      "价格比普通LED电视略高",
+      "尺寸选择有限(主推55/65寸)"
+    ],
+    "competitors": ["小米电视6 OLED", "海信U7K", "索尼X90L"],
+    "description": "TCL 55Q10G Pro是TCL高端QD-Mini LED系列代表作，采用数百个Mini LED灯珠实现精准控光，配合量子点技术呈现广色域画面。120Hz高刷新率和HDMI 2.1接口完美适配游戏场景，HDR 1000认证确保HDR内容精彩呈现。适合追求极致画质体验、预算在5000-6000元档位的用户。",
+    "keywords": ["Mini LED", "量子点", "4K", "120Hz", "高画质", "游戏电视"],
+    "warranty": "整机1年，主要部件3年",
+    "energy_class": "二级能效"
+  },
+  {
+    "product_id": "tv_002",
+    "category": "电视",
+    "model": "TCL 65Q10G Pro",
+    "series": "QD-Mini LED系列",
+    "brand": "TCL",
+    "basic_params": {
+      "size": "65英寸",
+      "resolution": "4K (3840x2160)",
+      "price_range": "8000-9000元",
+      "release_year": "2024",
+      "screen_type": "液晶电视"
+    },
+    "tech_params": {
+      "backlight": "Mini LED",
+      "led_count": "更多Mini LED灯珠",
+      "color_tech": "量子点技术(QD)",
+      "color_gamut": "157% BT.709",
+      "refresh_rate": "120Hz",
+      "hdr_standard": "HDR 1000",
+      "peak_brightness": "1000尼特",
+      "contrast_ratio": "超高对比度",
+      "response_time": "6ms"
+    },
+    "smart_features": [
+      "AI画质优化",
+      "杜比全景声",
+      "智能语音控制",
+      "MEMC运动补偿",
+      "护眼模式"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2",
+      "网络接口",
+      "光纤音频输出"
+    ],
+    "suitable_for": [
+      "大客厅观影",
+      "家庭影院",
+      "游戏娱乐",
+      "多人观看"
+    ],
+    "target_users": [
+      "大户型客厅用户",
+      "家庭影院爱好者",
+      "预算8000-9000元"
+    ],
+    "pros": [
+      "65寸大屏沉浸感强",
+      "Mini LED画质出色",
+      "适合客厅观影"
+    ],
+    "cons": [
+      "价格较高",
+      "需要较大观看距离(3米以上)"
+    ],
+    "description": "65英寸版本，适合大客厅使用，观影距离建议3米以上。画质技术与55寸版本一致，更大的屏幕带来更强的沉浸感。",
+    "keywords": ["Mini LED", "量子点", "65英寸", "大屏", "家庭影院"],
+    "warranty": "整机1年，主要部件3年",
+    "energy_class": "二级能效"
+  },
+  {
+    "product_id": "tv_003",
+    "category": "电视",
+    "model": "TCL 55T7G",
+    "series": "高性价比系列",
+    "brand": "TCL",
+    "basic_params": {
+      "size": "55英寸",
+      "resolution": "4K (3840x2160)",
+      "price_range": "4000-4500元",
+      "release_year": "2024",
+      "screen_type": "液晶电视"
+    },
+    "tech_params": {
+      "backlight": "直下式LED",
+      "color_tech": "广色域技术",
+      "refresh_rate": "60Hz(支持120Hz MEMC)",
+      "hdr_standard": "HDR 600",
+      "peak_brightness": "400尼特"
+    },
+    "smart_features": [
+      "智能语音控制",
+      "AI画质调节",
+      "护眼模式",
+      "智能家居互联"
+    ],
+    "interface": [
+      "HDMI 2.0 x3",
+      "USB 2.0 x2",
+      "网络接口"
+    ],
+    "suitable_for": [
+      "日常观影",
+      "普通家庭使用",
+      "预算有限用户"
+    ],
+    "target_users": [
+      "预算4000-4500元用户",
+      "追求性价比",
+      "普通观影需求"
+    ],
+    "pros": [
+      "价格亲民",
+      "功能齐全",
+      "性价比极高",
+      "满足基本需求"
+    ],
+    "cons": [
+      "画质不如Mini LED系列",
+      "刷新率60Hz原生"
+    ],
+    "description": "TCL 55T7G是高性价比系列的代表，在4000-4500元价位提供完整的智能电视功能。适合预算有限但需要可靠品质的用户，满足日常观影追剧需求。虽然画质参数不如高端系列，但对于普通家庭使用完全足够。",
+    "keywords": ["性价比", "4K", "智能电视", "入门级"],
+    "warranty": "整机1年",
+    "energy_class": "三级能效"
+  },
+  {
+    "product_id": "tv_004",
+    "category": "电视",
+    "model": "TCL 75V8G",
+    "series": "巨幕系列",
+    "brand": "TCL",
+    "basic_params": {
+      "size": "75英寸",
+      "resolution": "4K (3840x2160)",
+      "price_range": "6000-7000元",
+      "release_year": "2024",
+      "screen_type": "液晶电视"
+    },
+    "tech_params": {
+      "backlight": "直下式LED",
+      "color_tech": "广色域",
+      "refresh_rate": "60Hz",
+      "hdr_standard": "HDR 600"
+    },
+    "smart_features": [
+      "智能语音",
+      "AI画质",
+      "巨幕优化算法"
+    ],
+    "interface": [
+      "HDMI 2.0 x3",
+      "USB 2.0 x2"
+    ],
+    "suitable_for": [
+      "超大客厅",
+      "会议室",
+      "多人观看"
+    ],
+    "target_users": [
+      "追求大屏体验",
+      "大户型用户",
+      "会议室需求"
+    ],
+    "pros": [
+      "75寸超大屏幕",
+      "价格相对亲民",
+      "适合多人观看"
+    ],
+    "cons": [
+      "需要超大观看空间",
+      "画质参数中规中矩"
+    ],
+    "description": "75英寸巨幕电视，适合超大客厅或会议室使用。在6000-7000元价位提供75寸大屏体验，性价比出色。观看距离建议3.5米以上。",
+    "keywords": ["75英寸", "巨幕", "大屏", "性价比"],
+    "warranty": "整机1年",
+    "energy_class": "三级能效"
+  },
+  {
+    "product_id": "tv_005",
+    "category": "电视",
+    "model": "TCL 98Q10G",
+    "series": "巨幕Mini LED系列",
+    "brand": "TCL",
+    "basic_params": {
+      "size": "98英寸",
+      "resolution": "4K (3840x2160)",
+      "price_range": "20000-25000元",
+      "release_year": "2024",
+      "screen_type": "液晶电视"
+    },
+    "tech_params": {
+      "backlight": "Mini LED",
+      "color_tech": "量子点",
+      "refresh_rate": "120Hz",
+      "hdr_standard": "HDR 1000"
+    },
+    "smart_features": [
+      "AI画质优化",
+      "杜比全景声",
+      "巨幕专属算法"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "豪华客厅",
+      "高端会议室",
+      "家庭影院发烧友"
+    ],
+    "target_users": [
+      "高端用户",
+      "家庭影院发烧友",
+      "企业会议室"
+    ],
+    "pros": [
+      "98寸极致震撼",
+      "Mini LED画质顶级",
+      "适合专业场景"
+    ],
+    "cons": [
+      "价格昂贵",
+      "需要极大空间",
+      "安装复杂"
+    ],
+    "description": "TCL巨幕旗舰产品，98英寸QD-Mini LED电视，适合高端家庭影院或企业会议室。画质技术顶级，带来影院级观看体验。观看距离建议4米以上，需要专业安装。",
+    "keywords": ["98英寸", "巨幕", "Mini LED", "旗舰", "家庭影院"],
+    "warranty": "整机1年，主要部件3年",
+    "energy_class": "二级能效"
+  }
+]

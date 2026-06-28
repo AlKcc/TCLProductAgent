@@ -1,0 +1,139 @@
+[
+  {
+    "product_id": "fridge_001",
+    "category": "冰箱",
+    "model": "TCL R455P4-S",
+    "series": "风冷无霜系列",
+    "brand": "TCL",
+    "product_type": "对开门冰箱",
+    "basic_params": {
+      "total_capacity": "455L",
+      "fridge_capacity": "285L",
+      "freezer_capacity": "170L",
+      "dimensions": "宽833mm×深650mm×高1810mm",
+      "price_range": "3000-3500元",
+      "release_year": "2024"
+    },
+    "tech_params": {
+      "cooling_type": "风冷无霜",
+      "compressor": "变频压缩机",
+      "energy_level": "一级能效",
+      "noise_level": "36dB",
+      "temperature_control": "电脑温控"
+    },
+    "features": [
+      "风冷无霜(无需手动除霜)",
+      "变频节能",
+      "独立双循环",
+      "智能控温",
+      "快速冷冻",
+      "LED照明"
+    ],
+    "storage_design": [
+      "多层可调节搁架",
+      "大容量果蔬室",
+      "门板储物格",
+      "冷冻室多抽屉"
+    ],
+    "suitable_for": [
+      "3-5人家庭",
+      "中型厨房",
+      "对开门需求"
+    ],
+    "pros": [
+      "风冷无霜免除霜烦恼",
+      "455L容量适中",
+      "一级能效节能",
+      "对开门设计美观"
+    ],
+    "cons": [
+      "宽度833mm需要足够空间",
+      "对开门占用开门空间"
+    ],
+    "description": "TCL 455L风冷无霜对开门冰箱，适合3-5人家庭使用。风冷技术免除手动除霜烦恼，变频压缩机一级能效节能省电。独立双循环系统保证冷藏冷冻独立运行，电脑温控精准调节。对开门设计美观大气，适合现代厨房。",
+    "keywords": ["风冷无霜", "对开门", "455L", "一级能效", "变频"],
+    "warranty": "整机1年，压缩机3年"
+  },
+  {
+    "product_id": "fridge_002",
+    "category": "冰箱",
+    "model": "TCL R215L3-S",
+    "series": "小容量系列",
+    "brand": "TCL",
+    "product_type": "两门冰箱",
+    "basic_params": {
+      "total_capacity": "215L",
+      "fridge_capacity": "145L",
+      "freezer_capacity": "70L",
+      "dimensions": "宽540mm×深580mm×高1650mm",
+      "price_range": "1500-2000元"
+    },
+    "tech_params": {
+      "cooling_type": "直冷",
+      "energy_level": "二级能效",
+      "noise_level": "38dB"
+    },
+    "features": [
+      "基础冷藏冷冻",
+      "机械控温",
+      "性价比高"
+    ],
+    "suitable_for": [
+      "单身/情侣",
+      "出租房",
+      "小厨房",
+      "预算有限"
+    ],
+    "pros": [
+      "价格便宜",
+      "尺寸小巧",
+      "适合小空间"
+    ],
+    "cons": [
+      "需要手动除霜",
+      "容量较小"
+    ],
+    "description": "215L两门小冰箱，适合单身或情侣使用。尺寸小巧适合小厨房或出租房，价格亲民性价比高。直冷技术需要手动除霜，适合预算有限用户。",
+    "keywords": ["小冰箱", "两门", "出租房", "性价比"],
+    "warranty": "整机1年"
+  },
+  {
+    "product_id": "fridge_003",
+    "category": "冰箱",
+    "model": "TCL R518P4-D",
+    "series": "十字对开门系列",
+    "brand": "TCL",
+    "product_type": "十字对开门冰箱",
+    "basic_params": {
+      "total_capacity": "518L",
+      "fridge_capacity": "320L",
+      "freezer_capacity": "198L",
+      "dimensions": "宽910mm×深700mm×高1850mm",
+      "price_range": "4000-5000元"
+    },
+    "tech_params": {
+      "cooling_type": "风冷无霜",
+      "energy_level": "一级能效",
+      "compressor": "变频"
+    },
+    "features": [
+      "风冷无霜",
+      "十字四门设计",
+      "独立温区",
+      "智能控温"
+    ],
+    "suitable_for": [
+      "5-7人大家庭",
+      "大厨房",
+      "分区存储需求"
+    ],
+    "pros": [
+      "518L超大容量",
+      "十字门分区灵活",
+      "风冷无霜"
+    ],
+    "description": "518L十字对开门冰箱，适合5-7人大家庭。十字四门设计提供灵活分区存储，风冷无霜免除除霜烦恼。一级能效变频节能。",
+    "keywords": ["十字门", "518L", "大容量", "风冷无霜"],
+    "warranty": "整机1年，压缩机3年"
+  }
+]

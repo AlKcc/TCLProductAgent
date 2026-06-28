@@ -1,0 +1,137 @@
+[
+  {
+    "product_id": "washer_001",
+    "category": "洗衣机",
+    "model": "TCL XQG100-L150B",
+    "series": "滚筒洗衣机系列",
+    "brand": "TCL",
+    "product_type": "滚筒洗衣机",
+    "basic_params": {
+      "capacity": "10kg",
+      "dimensions": "宽595mm×深560mm×高850mm",
+      "price_range": "2500-3000元",
+      "release_year": "2024"
+    },
+    "tech_params": {
+      "motor_type": "变频电机",
+      "spin_speed": "最高1400转/分",
+      "energy_level": "一级能效",
+      "noise_level": "洗涤48dB/脱水65dB",
+      "water_consumption": "约60L/次"
+    },
+    "features": [
+      "10kg大容量",
+      "变频电机静音",
+      "95度高温煮洗",
+      "多种洗涤程序",
+      "童锁保护",
+      "中途加衣"
+    ],
+    "wash_programs": [
+      "标准洗",
+      "快速洗(15分钟)",
+      "羊毛洗",
+      "混合洗",
+      "高温煮洗",
+      "筒自洁"
+    ],
+    "suitable_for": [
+      "3-5人家庭",
+      "日常衣物洗涤",
+      "婴儿衣物(高温煮洗)"
+    ],
+    "pros": [
+      "10kg大容量适合家庭",
+      "变频电机静音节能",
+      "95度高温煮洗杀菌",
+      "价格实惠性价比高"
+    ],
+    "cons": [
+      "滚筒洗衣机洗涤时间较长",
+      "需要弯腰取衣"
+    ],
+    "description": "TCL 10kg滚筒洗衣机，适合3-5人家庭使用。变频电机一级能效静音节能，95度高温煮洗功能适合婴儿衣物杀菌。多种洗涤程序满足不同需求，筒自洁功能保持内部清洁。价格在2500-3000元档位性价比出色。",
+    "keywords": ["滚筒洗衣机", "10kg", "变频", "高温煮洗", "一级能效"],
+    "warranty": "整机3年，电机10年"
+  },
+  {
+    "product_id": "washer_002",
+    "category": "洗衣机",
+    "model": "TCL XPB80-1808S",
+    "series": "波轮洗衣机系列",
+    "brand": "TCL",
+    "product_type": "波轮洗衣机",
+    "basic_params": {
+      "capacity": "8kg",
+      "dimensions": "宽520mm×深520mm×高900mm",
+      "price_range": "800-1000元"
+    },
+    "tech_params": {
+      "motor_type": "定频电机",
+      "spin_speed": "最高800转/分",
+      "energy_level": "三级能效"
+    },
+    "features": [
+      "波轮洗涤",
+      "快速洗涤",
+      "操作简单",
+      "价格便宜"
+    ],
+    "suitable_for": [
+      "单身/情侣",
+      "出租房",
+      "预算有限",
+      "追求便捷操作"
+    ],
+    "pros": [
+      "价格非常便宜",
+      "操作简单易懂",
+      "洗涤速度快",
+      "无需弯腰取衣"
+    ],
+    "cons": [
+      "耗水量较大",
+      "对衣物磨损较大",
+      "三级能效耗电"
+    ],
+    "description": "8kg波轮洗衣机，适合单身或出租房使用。价格便宜800-1000元，操作简单便捷。波轮洗涤速度快但耗水量大，适合预算有限用户。",
+    "keywords": ["波轮洗衣机", "8kg", "便宜", "出租房"],
+    "warranty": "整机1年"
+  },
+  {
+    "product_id": "washer_003",
+    "category": "洗衣机",
+    "model": "TCL XQG120-L200B",
+    "series": "大容量滚筒系列",
+    "brand": "TCL",
+    "product_type": "滚筒洗衣机",
+    "basic_params": {
+      "capacity": "12kg",
+      "price_range": "3500-4000元"
+    },
+    "tech_params": {
+      "motor_type": "变频直驱电机",
+      "spin_speed": "最高1500转/分",
+      "energy_level": "一级能效"
+    },
+    "features": [
+      "12kg超大容量",
+      "变频直驱更静音",
+      "智能投放洗涤剂",
+      "蒸汽洗护"
+    ],
+    "suitable_for": [
+      "5-7人大家庭",
+      "大批量洗涤",
+      "高端需求"
+    ],
+    "pros": [
+      "12kg超大容量",
+      "直驱电机超静音",
+      "智能投放方便"
+    ],
+    "description": "12kg超大容量滚筒洗衣机，适合5-7人大家庭。变频直驱电机超静音，智能投放洗涤剂方便，蒸汽洗护呵护衣物。",
+    "keywords": ["滚筒", "12kg", "大容量", "直驱", "智能投放"],
+    "warranty": "整机3年，电机10年"
+  }
+]

@@ -1,0 +1,31 @@
+# TCL Product Agent 依赖包
+
+# LangChain框架
+langchain>=0.3.0
+langchain-community>=0.4.0
+langchain-core>=1.4.0
+
+# GLM大模型
+zhipuai>=2.1.0
+
+# 向量数据库
+chromadb>=0.5.0
+
+# Web界面
+gradio>=4.0.0
+
+# 文档处理
+pdfplumber>=0.10.0
+
+# 工具包
+python-dotenv>=1.0.0
+python-dateutil>=2.8.0
+
+# HTTP客户端
+httpx>=0.25.0
+
+# 数据处理
+numpy>=1.24.0
+
+# 测试
+pytest>=7.4.0

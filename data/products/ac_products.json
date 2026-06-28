@@ -1,0 +1,130 @@
+[
+  {
+    "product_id": "ac_001",
+    "category": "空调",
+    "model": "TCL KFRd-35GW/DBp-XA31+B1",
+    "series": "变频节能系列",
+    "brand": "TCL",
+    "product_type": "挂壁式空调",
+    "basic_params": {
+      "power": "1.5匹",
+      "cooling_capacity": "3500W",
+      "heating_capacity": "4000W",
+      "applicable_area": "15-22㎡",
+      "price_range": "2500-3000元",
+      "release_year": "2024"
+    },
+    "tech_params": {
+      "compressor": "变频压缩机",
+      "energy_level": "新一级能效",
+      "seer": "5.28",
+      "noise_level": "18dB(静音档)",
+      "refrigerant": "R32环保制冷剂",
+      "air_flow": "700m³/h"
+    },
+    "features": [
+      "智能温控",
+      "自清洁功能",
+      "独立除湿",
+      "快速冷暖",
+      "睡眠模式",
+      "APP远程控制"
+    ],
+    "suitable_for": [
+      "卧室使用",
+      "小户型客厅",
+      "办公室",
+      "出租房"
+    ],
+    "pros": [
+      "新一级能效节能省电",
+      "18dB超静音",
+      "变频技术舒适恒温",
+      "价格实惠性价比高"
+    ],
+    "cons": [
+      "1.5匹功率适中，不适合大面积",
+      "外观设计相对简约"
+    ],
+    "description": "TCL 1.5匹变频挂壁空调，新一级能效，适合15-22㎡卧室或小客厅使用。18dB超静音设计保证睡眠质量，智能温控+自清洁功能提供舒适体验。变频技术实现恒温控制，节能省电。APP远程控制方便日常使用。",
+    "keywords": ["变频", "一级能效", "静音", "卧室空调", "1.5匹"],
+    "warranty": "整机6年"
+  },
+  {
+    "product_id": "ac_002",
+    "category": "空调",
+    "model": "TCL KFRd-51LW/DBp-XA31+B1",
+    "series": "变频节能系列",
+    "brand": "TCL",
+    "product_type": "柜式空调",
+    "basic_params": {
+      "power": "2匹",
+      "cooling_capacity": "5100W",
+      "heating_capacity": "5600W",
+      "applicable_area": "20-30㎡",
+      "price_range": "4000-4500元"
+    },
+    "tech_params": {
+      "compressor": "变频压缩机",
+      "energy_level": "新一级能效",
+      "seer": "5.28",
+      "noise_level": "22dB"
+    },
+    "features": [
+      "智能温控",
+      "自清洁",
+      "大风力送风",
+      "广角送风"
+    ],
+    "suitable_for": [
+      "客厅使用",
+      "中型房间",
+      "会议室"
+    ],
+    "pros": [
+      "2匹功率适合客厅",
+      "一级能效节能",
+      "柜式设计美观"
+    ],
+    "description": "2匹柜式空调，适合20-30㎡客厅使用。一级能效变频技术，大风力广角送风快速调节室温。柜式设计美观大气，适合客厅摆放。",
+    "keywords": ["柜式空调", "2匹", "客厅", "一级能效"],
+    "warranty": "整机6年"
+  },
+  {
+    "product_id": "ac_003",
+    "category": "空调",
+    "model": "TCL KFRd-26GW/DBp-XA11+B1",
+    "series": "小功率变频系列",
+    "brand": "TCL",
+    "product_type": "挂壁式空调",
+    "basic_params": {
+      "power": "大1匹",
+      "cooling_capacity": "2600W",
+      "heating_capacity": "2900W",
+      "applicable_area": "10-15㎡",
+      "price_range": "2000-2500元"
+    },
+    "tech_params": {
+      "energy_level": "新一级能效",
+      "noise_level": "16dB"
+    },
+    "features": [
+      "超静音",
+      "自清洁",
+      "智能控制"
+    ],
+    "suitable_for": [
+      "小卧室",
+      "书房",
+      "儿童房"
+    ],
+    "pros": [
+      "大1匹适合小房间",
+      "16dB极致静音",
+      "价格便宜"
+    ],
+    "description": "大1匹挂壁空调，适合10-15㎡小房间使用。16dB极致静音适合卧室和儿童房，价格亲民性价比高。",
+    "keywords": ["1匹", "小房间", "静音", "卧室"],
+    "warranty": "整机6年"
+  }
+]

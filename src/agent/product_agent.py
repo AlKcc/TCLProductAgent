@@ -1,0 +1,215 @@
+"""
+TCL产品Agent主逻辑
+"""
+import os
+from typing import Optional, List, Dict
+from langchain_community.chat_models import ChatZhipuAI
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
+from langchain.memory import ConversationBufferMemory
+
+from ..utils.config import Config, MODEL_NAME
+from ..utils.logger import logger
+from ..utils.helpers import (
+    load_all_products, search_product_by_keyword,
+    filter_products_by_price_range, format_product_info,
+    format_comparison_table
+)
+from .intent_classifier import Intent, IntentClassifier, intent_classifier
+
+
+class TCLProductAgent:
+    """TCL产品智能咨询Agent"""
+
+    def __init__(self, api_key: Optional[str] = None):
+        """
+        初始化Agent
+
+        Args:
+            api_key: GLM API密钥，如果为None则从环境变量读取
+        """
+        self.api_key = api_key or Config.API_KEY
+        self.model_name = MODEL_NAME
+
+        # 初始化LLM
+        self.llm = ChatZhipuAI(
+            api_key=self.api_key,
+            model=self.model_name,
+            temperature=Config.TEMPERATURE
+        )
+
+        # 初始化意图分类器
+        self.intent_classifier = IntentClassifier()
+
+        # 初始化对话记忆
+        self.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
+        )
+
+        # 加载产品数据
+        self.products = load_all_products()
+        logger.info(f"TCL产品Agent初始化完成，加载产品数据 {sum(len(v) for v in self.products.values())} 款")
+
+    def _create_system_message(self, intent: Intent) -> str:
+        """根据意图创建系统提示词"""
+
+        system_prompts = {
+            Intent.PRODUCT_QUERY: """你是TCL产品咨询专家，专门回答用户关于TCL产品的技术参数、功能特点、使用体验等问题。
+
+回答要求：
+1. 基于产品知识库回答，确保信息准确
+2. 重点突出产品的核心技术和优势
+3. 语言简洁明了，通俗易懂
+4. 如果问题涉及多个型号，逐一说明
+""",
+
+            Intent.RECOMMENDATION: """你是TCL产品推荐专家，根据用户需求推荐最合适的TCL产品。
+
+推荐原则：
+1. 先了解用户的具体需求（预算、用途、空间等）
+2. 推荐最匹配的1-2款产品，并说明推荐理由
+3. 提供备选方案
+4. 诚实说明产品的优点和不足
+""",
+
+            Intent.COMPARISON: """你是TCL产品对比专家，帮助用户对比不同TCL产品的差异。
+
+对比要点：
+1. 从价格、核心技术、功能特性、适用场景等多维度对比
+2. 指出各产品的优缺点
+3. 根据用户需求给出选择建议
+""",
+
+            Intent.TROUBLESHOOTING: """你是TCL产品技术支持专家，帮助用户排查产品故障。
+
+重要原则：
+1. 提供自助排查步骤，帮助用户尝试解决问题
+2. 不提供专业维修建议（安全风险）
+3. 如果问题无法解决，建议联系官方售后
+4. 添加免责声明，避免误导用户
+""",
+
+            Intent.TIPS: """你是TCL产品使用专家，提供产品使用技巧和保养建议。
+
+内容要求：
+1. 提供实用、可操作的建议
+2. 涵盖日常使用、节能、保养等方面
+3. 语言简洁，步骤清晰
+""",
+
+            Intent.GENERAL_CHAT: """你是TCL产品智能助手，可以回答关于TCL产品的一般性问题。
+保持友好、专业的态度。"""
+        }
+
+        return system_prompts.get(intent, system_prompts[Intent.GENERAL_CHAT])
+
+    def _build_context(self, user_input: str, intent: Intent) -> str:
+        """构建上下文信息"""
+
+        context = ""
+
+        if intent == Intent.PRODUCT_QUERY:
+            # 搜索相关产品
+            products = search_product_by_keyword(user_input)
+            if products:
+                context += f"\n【相关产品信息】\n"
+                for product in products[:3]:
+                    context += format_product_info(product) + "\n"
+
+        elif intent == Intent.RECOMMENDATION:
+            # 提取预算信息
+            context += "\n【可用产品列表】\n"
+            for category, products in self.products.items():
+                category_names = {'tv': '电视', 'ac': '空调', 'fridge': '冰箱', 'washer': '洗衣机'}
+                context += f"\n{category_names.get(category, category)}:\n"
+                for product in products:
+                    context += f"- {product.get('model', '')}: {product.get('basic_params', {}).get('price_range', '')}\n"
+
+        return context
+
+    def chat(self, user_input: str) -> str:
+        """
+        与Agent对话
+
+        Args:
+            user_input: 用户输入
+
+        Returns:
+            str: Agent回复
+        """
+        try:
+            # 1. 意图识别
+            intent = self.intent_classifier.classify(user_input)
+            logger.info(f"用户意图: {intent.value} - {user_input}")
+
+            # 2. 构建上下文
+            context = self._build_context(user_input, intent)
+
+            # 3. 构建消息
+            system_prompt = self._create_system_message(intent)
+
+            messages = [
+                SystemMessage(content=system_prompt),
+            ]
+
+            # 添加对话历史
+            history = self.memory.load_memory_variables({})
+            if 'chat_history' in history:
+                messages.extend(history['chat_history'])
+
+            # 添加当前问题
+            if context:
+                user_message = f"{context}\n\n用户问题：{user_input}"
+            else:
+                user_message = user_input
+
+            messages.append(HumanMessage(content=user_message))
+
+            # 4. 调用LLM
+            response = self.llm.invoke(messages)
+            answer = response.content
+
+            # 5. 更新对话记忆
+            self.memory.save_context(
+                {"input": user_input},
+                {"output": answer}
+            )
+
+            return answer
+
+        except Exception as e:
+            logger.error(f"对话发生错误: {e}")
+            return "抱歉，我遇到了一些问题，请稍后再试。"
+
+    def clear_history(self):
+        """清除对话历史"""
+        self.memory.clear()
+        logger.info("对话历史已清除")
+
+
+# 创建全局Agent实例
+agent_instance = None
+
+
+def get_agent() -> TCLProductAgent:
+    """获取Agent单例"""
+    global agent_instance
+    if agent_instance is None:
+        agent_instance = TCLProductAgent()
+    return agent_instance
+
+
+if __name__ == "__main__":
+    # 测试Agent
+    agent = TCLProductAgent()
+
+    test_questions = [
+        "TCL 55Q10G Pro电视怎么样？",
+        "我想买一台5000元左右的电视",
+        "55Q10G和55T7G哪个好？"
+    ]
+
+    for question in test_questions:
+        print(f"\n👤 用户: {question}")
+        print(f"🤖 Agent: {agent.chat(question)}")
+        print("-" * 50)
