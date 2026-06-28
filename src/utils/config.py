@@ -30,6 +30,11 @@ LOG_FILE = PROJECT_ROOT / "logs" / "agent.log"
 CHROMA_PERSIST_DIRECTORY = str(VECTOR_DB_PATH)
 EMBEDDING_MODEL = "text2vec-base-chinese"  # 或使用 GLM 的 embedding
 
+# RAG配置（模块级常量，供其他模块导入）
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 50
+TOP_K_RETRIEVAL = 3
+
 # 确保目录存在
 VECTOR_DB_PATH.mkdir(parents=True, exist_ok=True)
 (Path(__file__).parent.parent / "logs").mkdir(parents=True, exist_ok=True)
