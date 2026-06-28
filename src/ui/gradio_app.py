@@ -2,7 +2,7 @@
 Gradio Web界面
 """
 import gradio as gr
-from typing import List, Tuple
+from typing import List, Dict, Tuple
 
 from ..agent.product_agent import TCLProductAgent, get_agent
 from ..utils.logger import logger
@@ -14,9 +14,9 @@ class GradioInterface:
     def __init__(self):
         """初始化界面"""
         self.agent = get_agent()
-        self.chat_history: List[Tuple[str, str]] = []
+        self.chat_history: List[Dict] = []
 
-    def chat_response(self, user_input: str, history: List[Tuple[str, str]]) -> Tuple[str, List[Tuple[str, str]]]:
+    def chat_response(self, user_input: str, history: List[Dict]) -> Tuple[str, List[Dict]]:
         """
         处理用户输入并返回响应
 
@@ -25,26 +25,32 @@ class GradioInterface:
             history: 对话历史
 
         Returns:
-            Tuple[str, List[Tuple[str, str]]]: (新回复, 更新后的历史)
+            Tuple[str, List[Dict]]: (清空输入框, 更新后的历史)
         """
         try:
             # 调用Agent
             response = self.agent.chat(user_input)
 
-            # 更新历史
-            new_history = history + [(user_input, response)]
+            # 更新历史 - Gradio 6.x 需要字典格式
+            new_history = history + [
+                {"role": "user", "content": user_input},
+                {"role": "assistant", "content": response}
+            ]
 
             logger.info(f"用户: {user_input}")
             logger.info(f"Agent: {response[:100]}...")
 
-            return response, new_history
+            return "", new_history
 
         except Exception as e:
             error_msg = f"抱歉，发生错误: {str(e)}"
             logger.error(error_msg)
-            return error_msg, history
+            return "", history + [
+                {"role": "user", "content": user_input},
+                {"role": "assistant", "content": error_msg}
+            ]
 
-    def clear_chat(self, history: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
+    def clear_chat(self, history: List[Dict]) -> List[Dict]:
         """清除对话"""
         self.agent.clear_history()
         logger.info("对话已清除")
@@ -88,7 +94,6 @@ class GradioInterface:
 
                     with gr.Row():
                         clear_btn = gr.Button("清除对话", scale=1)
-                        example_btn = gr.Button("示例问题", scale=1)
 
                 with gr.Column(scale=1):
                     gr.Markdown("### 快捷功能")
@@ -134,12 +139,6 @@ class GradioInterface:
                 self.clear_chat,
                 inputs=[chatbot],
                 outputs=[chatbot]
-            )
-
-            example_btn.click(
-                lambda: gr.Examples.update(selected=0),
-                inputs=None,
-                outputs=None
             )
 
         return app

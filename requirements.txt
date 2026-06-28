@@ -2,8 +2,8 @@
 
 # LangChain框架
 langchain>=0.3.0
-langchain-community>=0.4.0
-langchain-core>=1.4.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
 
 # GLM大模型
 zhipuai>=2.1.0
