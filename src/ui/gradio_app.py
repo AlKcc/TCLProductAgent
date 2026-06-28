@@ -52,7 +52,7 @@ class GradioInterface:
 
     def create_interface(self):
         """创建Gradio界面"""
-        with gr.Blocks(title="TCL智能产品咨询助手", theme=gr.themes.Soft()) as app:
+        with gr.Blocks(title="TCL智能产品咨询助手") as app:
             gr.Markdown("""
             # 🏢 TCL智能产品咨询助手
 
@@ -76,7 +76,6 @@ class GradioInterface:
                     chatbot = gr.Chatbot(
                         label="对话历史",
                         height=500,
-                        show_copy_button=True,
                         bubble_full_width=False
                     )
 
