@@ -75,8 +75,7 @@ class GradioInterface:
                 with gr.Column(scale=4):
                     chatbot = gr.Chatbot(
                         label="对话历史",
-                        height=500,
-                        bubble_full_width=False
+                        height=500
                     )
 
                     with gr.Row():
