@@ -4,8 +4,7 @@ TCL产品Agent主逻辑
 import os
 from typing import Optional, List, Dict
 from langchain_community.chat_models import ChatZhipuAI
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
-from langchain.memory import ConversationBufferMemory
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from ..utils.config import Config, MODEL_NAME
 from ..utils.logger import logger
@@ -40,11 +39,8 @@ class TCLProductAgent:
         # 初始化意图分类器
         self.intent_classifier = IntentClassifier()
 
-        # 初始化对话记忆
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
-        )
+        # 初始化对话记忆（简化版，使用列表）
+        self.chat_history = []
 
         # 加载产品数据
         self.products = load_all_products()
@@ -152,10 +148,10 @@ class TCLProductAgent:
                 SystemMessage(content=system_prompt),
             ]
 
-            # 添加对话历史
-            history = self.memory.load_memory_variables({})
-            if 'chat_history' in history:
-                messages.extend(history['chat_history'])
+            # 添加对话历史（简化版）
+            for human_msg, ai_msg in self.chat_history[-5:]:  # 保留最近5轮对话
+                messages.append(HumanMessage(content=human_msg))
+                messages.append(AIMessage(content=ai_msg))
 
             # 添加当前问题
             if context:
@@ -170,10 +166,7 @@ class TCLProductAgent:
             answer = response.content
 
             # 5. 更新对话记忆
-            self.memory.save_context(
-                {"input": user_input},
-                {"output": answer}
-            )
+            self.chat_history.append((user_input, answer))
 
             return answer
 
@@ -183,7 +176,7 @@ class TCLProductAgent:
 
     def clear_history(self):
         """清除对话历史"""
-        self.memory.clear()
+        self.chat_history = []
         logger.info("对话历史已清除")
 
 
