@@ -60,6 +60,16 @@ mkdir -p logs
 mkdir -p data/vectorstore
 echo "✅ 目录准备完成"
 
+# 检查模型缓存
+MODEL_CACHE="$HOME/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2"
+if [ ! -d "$MODEL_CACHE" ]; then
+    echo ""
+    echo "⚠️  模型未缓存，请先开启代理运行一次以下命令："
+    echo "   python -c \"from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')\""
+    echo "   或设置国内镜像: export HF_ENDPOINT=https://hf-mirror.com"
+    echo ""
+fi
+
 # 启动应用
 echo ""
 echo "========================================="
@@ -69,5 +79,8 @@ echo ""
 echo "访问地址: http://localhost:7860"
 echo "按 Ctrl+C 停止服务"
 echo ""
+
+# 临时关闭代理（避免代理干扰本地连接）
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
 
 python3 src/app.py
