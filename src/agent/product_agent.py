@@ -6,13 +6,14 @@ from typing import Optional, List, Dict
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-from ..utils.config import Config, MODEL_NAME
+from ..utils.config import Config, MODEL_NAME, DATA_DIR
 from ..utils.logger import logger
 from ..utils.helpers import (
     load_all_products, search_product_by_keyword,
     filter_products_by_price_range, format_product_info,
     format_comparison_table
 )
+from ..rag.document_loader import DocumentLoader
 from .intent_classifier import Intent, IntentClassifier, intent_classifier
 
 
@@ -45,6 +46,67 @@ class TCLProductAgent:
         # 加载产品数据
         self.products = load_all_products()
         logger.info(f"TCL产品Agent初始化完成，加载产品数据 {sum(len(v) for v in self.products.values())} 款")
+
+        # 加载多格式文档（PDF/MD/CSV）
+        self.document_loader = DocumentLoader()
+        self.documents = self._load_documents()
+        logger.info(f"加载多格式文档: {sum(len(v) for v in self.documents.values())} 条")
+
+    def _load_documents(self) -> dict:
+        """加载所有格式的文档"""
+        try:
+            docs = self.document_loader.load_all_knowledge(DATA_DIR)
+            logger.info("多格式文档加载成功")
+            return docs
+        except Exception as e:
+            logger.error(f"加载多格式文档失败: {e}")
+            return {'products': [], 'docs': [], 'faq': [], 'tips': []}
+
+    def _format_document_for_context(self, docs: List[str], max_docs: int = 3) -> str:
+        """将文档列表格式化为上下文"""
+        if not docs:
+            return ""
+
+        context = ""
+        for i, doc in enumerate(docs[:max_docs]):
+            context += f"\n【文档{i+1}】\n{doc[:500]}...\n" if len(doc) > 500 else f"\n【文档{i+1}】\n{doc}\n"
+
+        return context
+
+    def _search_documents(self, query: str, max_results: int = 3) -> List[str]:
+        """搜索相关文档（支持中英文检索，按匹配度排序）"""
+        query_lower = query.lower()
+        results = []
+
+        # 中文分词处理：提取所有中文字符作为关键词
+        keywords = []
+        for char in query_lower:
+            if '\u4e00' <= char <= '\u9fff':
+                keywords.append(char)
+
+        # 同时保留英文单词
+        for word in query_lower.split():
+            keywords.append(word)
+
+        # 如果没有提取到关键词，使用原始查询
+        if not keywords:
+            keywords = [query_lower]
+
+        # 搜索所有文档类别，并计算匹配度
+        scored_results = []
+        for category, docs in self.documents.items():
+            for doc in docs:
+                doc_lower = doc.lower()
+                # 计算匹配的关键词数量
+                match_count = sum(1 for keyword in keywords if keyword in doc_lower)
+                if match_count > 0:
+                    scored_results.append((match_count, doc))
+
+        # 按匹配度排序（匹配关键词越多越优先）
+        scored_results.sort(key=lambda x: x[0], reverse=True)
+
+        # 返回前max_results条
+        return [doc for _, doc in scored_results[:max_results]]
 
     def _create_system_message(self, intent: Intent) -> str:
         """根据意图创建系统提示词"""
@@ -100,20 +162,25 @@ class TCLProductAgent:
         return system_prompts.get(intent, system_prompts[Intent.GENERAL_CHAT])
 
     def _build_context(self, user_input: str, intent: Intent) -> str:
-        """构建上下文信息"""
+        """构建上下文信息（扩展版：包含产品数据+多格式文档）"""
 
         context = ""
 
-        if intent == Intent.PRODUCT_QUERY:
-            # 搜索相关产品
+        # 1. 搜索相关产品
+        if intent in [Intent.PRODUCT_QUERY, Intent.RECOMMENDATION, Intent.COMPARISON]:
             products = search_product_by_keyword(user_input)
             if products:
                 context += f"\n【相关产品信息】\n"
                 for product in products[:3]:
                     context += format_product_info(product) + "\n"
 
-        elif intent == Intent.RECOMMENDATION:
-            # 提取预算信息
+        # 2. 搜索多格式文档（PDF/MD/CSV中的相关内容）
+        relevant_docs = self._search_documents(user_input, max_results=2)
+        if relevant_docs:
+            context += self._format_document_for_context(relevant_docs, max_docs=2)
+
+        # 3. 推荐场景：列出所有产品
+        if intent == Intent.RECOMMENDATION:
             context += "\n【可用产品列表】\n"
             for category, products in self.products.items():
                 category_names = {'tv': '电视', 'ac': '空调', 'fridge': '冰箱', 'washer': '洗衣机'}

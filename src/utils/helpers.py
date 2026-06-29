@@ -46,7 +46,7 @@ def load_all_tips() -> List[Dict]:
 
 
 def search_product_by_keyword(keyword: str, category: Optional[str] = None) -> List[Dict]:
-    """根据关键词搜索产品"""
+    """根据关键词搜索产品（扩展搜索范围）"""
     products_dict = load_all_products()
 
     results = []
@@ -54,13 +54,23 @@ def search_product_by_keyword(keyword: str, category: Optional[str] = None) -> L
 
     for cat in categories_to_search:
         for product in products_dict[cat]:
-            # 搜索字段
-            searchable_text = (
-                f"{product.get('model', '')} "
-                f"{product.get('series', '')} "
-                f"{product.get('description', '')} "
-                f"{' '.join(product.get('keywords', []))}"
-            ).lower()
+            # 扩展搜索字段
+            searchable_text = " ".join([
+                product.get('model', ''),
+                product.get('series', ''),
+                product.get('description', ''),
+                product.get('warranty', ''),  # 添加保修信息
+                str(product.get('basic_params', {}).get('size', '')),
+                str(product.get('basic_params', {}).get('price_range', '')),
+                str(product.get('tech_params', {}).get('backlight', '')),
+                str(product.get('tech_params', {}).get('partition_count', '')),
+                str(product.get('tech_params', {}).get('refresh_rate', '')),
+                str(product.get('tech_params', {}).get('peak_brightness', '')),
+                " ".join(product.get('keywords', [])),
+                " ".join(product.get('pros', [])),
+                " ".join(product.get('cons', [])),
+                " ".join(product.get('smart_features', [])),
+            ]).lower()
 
             if keyword.lower() in searchable_text:
                 results.append(product)

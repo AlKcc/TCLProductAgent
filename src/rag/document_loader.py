@@ -1,26 +1,18 @@
 """
-文档加载模块
+文档加载模块 - 支持多格式文档
 """
 from typing import List
 from pathlib import Path
 
 
 class DocumentLoader:
-    """文档加载器"""
+    """文档加载器 - 支持JSON、PDF、Markdown、CSV"""
 
     def __init__(self):
         pass
 
     def load_from_json(self, file_path: Path) -> List[str]:
-        """
-        从JSON文件加载文档
-
-        Args:
-            file_path: JSON文件路径
-
-        Returns:
-            List[str]: 文档文本列表
-        """
+        """从JSON文件加载文档"""
         import json
 
         documents = []
@@ -28,7 +20,6 @@ class DocumentLoader:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # 根据数据类型构建文档
         if isinstance(data, list):
             for item in data:
                 doc_text = self._format_json_item(item)
@@ -40,7 +31,6 @@ class DocumentLoader:
         """格式化JSON条目为文本"""
         text = ""
 
-        # 添加标题
         if 'model' in item:
             text += f"【产品型号】{item['model']}\n"
         elif 'question' in item:
@@ -48,7 +38,6 @@ class DocumentLoader:
         elif 'title' in item:
             text += f"【{item['title']}】\n"
 
-        # 添加描述
         if 'description' in item:
             text += f"{item['description']}\n"
         elif 'answer' in item:
@@ -56,58 +45,125 @@ class DocumentLoader:
         elif 'content' in item:
             text += f"{item['content']}\n"
 
-        # 添加技术参数
+        if 'basic_params' in item:
+            text += "【基本参数】\n"
+            for key, value in item['basic_params'].items():
+                text += f"  {key}: {value}\n"
+
         if 'tech_params' in item:
             text += "【技术参数】\n"
             for key, value in item['tech_params'].items():
                 text += f"  {key}: {value}\n"
 
-        # 添加功能特性
+        if 'warranty' in item:
+            text += f"【保修政策】{item['warranty']}\n"
+
         if 'features' in item:
             text += f"【功能特性】{', '.join(item['features'])}\n"
 
-        # 添加优缺点
         if 'pros' in item:
             text += f"【优点】{', '.join(item['pros'])}\n"
         if 'cons' in item:
             text += f"【不足】{', '.join(item['cons'])}\n"
 
-        # 添加关键词
         if 'keywords' in item:
             text += f"【关键词】{', '.join(item['keywords'])}\n"
 
         return text
 
+    def load_from_pdf(self, file_path: Path) -> List[str]:
+        """从PDF文件加载文档"""
+        try:
+            from PyPDF2 import PdfReader
+            reader = PdfReader(str(file_path))
+            documents = []
+            for page in reader.pages:
+                text = page.extract_text()
+                if text and text.strip():
+                    documents.append(text.strip())
+            return documents
+        except ImportError:
+            print("⚠️ PyPDF2未安装，无法加载PDF文件")
+            return []
+        except Exception as e:
+            print(f"⚠️ 加载PDF文件失败: {e}")
+            return []
+
+    def load_from_md(self, file_path: Path) -> List[str]:
+        """从Markdown文件加载文档"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return [content]
+        except Exception as e:
+            print(f"⚠️ 加载Markdown文件失败: {e}")
+            return []
+
+    def load_from_csv(self, file_path: Path) -> List[str]:
+        """从CSV文件加载文档"""
+        try:
+            import csv
+            documents = []
+            with open(file_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row:
+                        doc_text = "【产品参数】\n"
+                        for key, value in row.items():
+                            doc_text += f"  {key}: {value}\n"
+                        documents.append(doc_text)
+            return documents
+        except ImportError:
+            print("⚠️ csv模块不可用")
+            return []
+        except Exception as e:
+            print(f"⚠️ 加载CSV文件失败: {e}")
+            return []
+
+    def load_file(self, file_path: Path) -> List[str]:
+        """根据文件扩展名自动选择加载方式"""
+        ext = file_path.suffix.lower()
+
+        if ext == '.json':
+            return self.load_from_json(file_path)
+        elif ext == '.pdf':
+            return self.load_from_pdf(file_path)
+        elif ext == '.md':
+            return self.load_from_md(file_path)
+        elif ext == '.csv':
+            return self.load_from_csv(file_path)
+        else:
+            print(f"⚠️ 不支持的文件格式: {ext}")
+            return []
+
     def load_all_knowledge(self, base_dir: Path) -> dict:
-        """
-        加载所有知识库文档
-
-        Args:
-            base_dir: 数据目录
-
-        Returns:
-            dict: 分类文档列表
-        """
+        """加载所有知识库文档（支持多格式）"""
         all_documents = {
             'products': [],
+            'docs': [],
             'faq': [],
             'tips': []
         }
 
-        # 加载产品文档
         products_dir = base_dir / 'products'
         if products_dir.exists():
-            for json_file in products_dir.glob('*.json'):
-                docs = self.load_from_json(json_file)
-                all_documents['products'].extend(docs)
+            for file in products_dir.glob('*'):
+                if file.is_file():
+                    docs = self.load_file(file)
+                    all_documents['products'].extend(docs)
 
-        # 加载FAQ
+        docs_dir = base_dir / 'docs'
+        if docs_dir.exists():
+            for file in docs_dir.glob('*'):
+                if file.is_file():
+                    docs = self.load_file(file)
+                    all_documents['docs'].extend(docs)
+
         faq_file = base_dir / 'faq' / 'common_faq.json'
         if faq_file.exists():
             docs = self.load_from_json(faq_file)
             all_documents['faq'].extend(docs)
 
-        # 加载使用技巧
         tips_file = base_dir / 'tips' / 'usage_tips.json'
         if tips_file.exists():
             docs = self.load_from_json(tips_file)
@@ -117,7 +173,6 @@ class DocumentLoader:
 
 
 if __name__ == "__main__":
-    # 测试文档加载
     from pathlib import Path
 
     loader = DocumentLoader()
