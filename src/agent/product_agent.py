@@ -14,6 +14,7 @@ from ..utils.helpers import (
     format_comparison_table
 )
 from ..rag.document_loader import DocumentLoader
+from ..rag.langchain_rag import LangChainRAG
 from .intent_classifier import Intent, IntentClassifier, intent_classifier
 
 
@@ -40,7 +41,7 @@ class TCLProductAgent:
         # 初始化意图分类器
         self.intent_classifier = IntentClassifier()
 
-        # 初始化对话记忆（简化版，使用列表）
+        # 初始化对话记忆（使用列表，兼容LangChain消息格式）
         self.chat_history = []
 
         # 加载产品数据
@@ -51,6 +52,14 @@ class TCLProductAgent:
         self.document_loader = DocumentLoader()
         self.documents = self._load_documents()
         logger.info(f"加载多格式文档: {sum(len(v) for v in self.documents.values())} 条")
+
+        # 初始化LangChain RAG（尝试语义检索，失败则自动降级）
+        self.langchain_rag = None
+        try:
+            self.langchain_rag = LangChainRAG(self.llm)
+            logger.info("LangChain RAG语义检索已启用")
+        except Exception as e:
+            logger.warning(f"LangChain RAG初始化失败，使用关键词检索作为fallback: {e}")
 
     def _load_documents(self) -> dict:
         """加载所有格式的文档"""
@@ -74,38 +83,41 @@ class TCLProductAgent:
         return context
 
     def _search_documents(self, query: str, max_results: int = 3) -> List[str]:
-        """搜索相关文档（支持中英文检索，按匹配度排序）"""
-        query_lower = query.lower()
-        results = []
+        """搜索相关文档（优先使用LangChain语义检索，失败则使用关键词检索）"""
+        # 优先尝试LangChain语义检索
+        if self.langchain_rag:
+            try:
+                docs = self.langchain_rag.retrieve(query, k=max_results)
+                if docs:
+                    logger.debug(f"LangChain语义检索成功，找到 {len(docs)} 条文档")
+                    return docs
+            except Exception as e:
+                logger.warning(f"LangChain语义检索失败，切换到关键词检索: {e}")
 
-        # 中文分词处理：提取所有中文字符作为关键词
+        # Fallback: 使用关键词检索
+        query_lower = query.lower()
+
         keywords = []
         for char in query_lower:
             if '\u4e00' <= char <= '\u9fff':
                 keywords.append(char)
 
-        # 同时保留英文单词
         for word in query_lower.split():
             keywords.append(word)
 
-        # 如果没有提取到关键词，使用原始查询
         if not keywords:
             keywords = [query_lower]
 
-        # 搜索所有文档类别，并计算匹配度
         scored_results = []
         for category, docs in self.documents.items():
             for doc in docs:
                 doc_lower = doc.lower()
-                # 计算匹配的关键词数量
                 match_count = sum(1 for keyword in keywords if keyword in doc_lower)
                 if match_count > 0:
                     scored_results.append((match_count, doc))
 
-        # 按匹配度排序（匹配关键词越多越优先）
         scored_results.sort(key=lambda x: x[0], reverse=True)
 
-        # 返回前max_results条
         return [doc for _, doc in scored_results[:max_results]]
 
     def _create_system_message(self, intent: Intent) -> str:
@@ -215,8 +227,8 @@ class TCLProductAgent:
                 SystemMessage(content=system_prompt),
             ]
 
-            # 添加对话历史（简化版）
-            for human_msg, ai_msg in self.chat_history[-5:]:  # 保留最近5轮对话
+            # 添加对话历史
+            for human_msg, ai_msg in self.chat_history[-5:]:
                 messages.append(HumanMessage(content=human_msg))
                 messages.append(AIMessage(content=ai_msg))
 
