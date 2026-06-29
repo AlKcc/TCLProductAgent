@@ -2,7 +2,7 @@
 TCL产品Agent主逻辑
 """
 import os
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
@@ -120,6 +120,88 @@ class TCLProductAgent:
 
         return [doc for _, doc in scored_results[:max_results]]
 
+    def _search_with_sources(self, query: str, max_results: int = 3) -> Tuple[List[str], List[Dict]]:
+        """
+        搜索相关文档并返回来源信息
+
+        Args:
+            query: 查询内容
+            max_results: 最大结果数
+
+        Returns:
+            Tuple[List[str], List[Dict]]: (文档内容列表, 来源信息列表)
+        """
+        sources = []
+
+        # 优先尝试LangChain语义检索
+        if self.langchain_rag:
+            try:
+                docs = self.langchain_rag.retrieve(query, k=max_results)
+                if docs:
+                    logger.debug(f"LangChain语义检索成功，找到 {len(docs)} 条文档")
+                    for i, doc in enumerate(docs):
+                        sources.append({
+                            "id": i + 1,
+                            "type": "文档",
+                            "category": "语义检索"
+                        })
+                    return docs, sources
+            except Exception as e:
+                logger.warning(f"LangChain语义检索失败，切换到关键词检索: {e}")
+
+        # Fallback: 使用关键词检索
+        query_lower = query.lower()
+
+        keywords = []
+        for char in query_lower:
+            if '\u4e00' <= char <= '\u9fff':
+                keywords.append(char)
+
+        for word in query_lower.split():
+            keywords.append(word)
+
+        if not keywords:
+            keywords = [query_lower]
+
+        scored_results = []
+        for category, docs in self.documents.items():
+            for doc in docs:
+                doc_lower = doc.lower()
+                match_count = sum(1 for keyword in keywords if keyword in doc_lower)
+                if match_count > 0:
+                    scored_results.append((match_count, doc, category))
+
+        scored_results.sort(key=lambda x: x[0], reverse=True)
+
+        docs = [doc for _, doc, _ in scored_results[:max_results]]
+
+        # 生成来源信息
+        for i, (score, doc, category) in enumerate(scored_results[:max_results]):
+            # 根据文档内容判断来源类型
+            if '产品型号' in doc or '型号' in doc:
+                doc_type = "产品参数"
+            elif '技术原理' in doc or '原理' in doc:
+                doc_type = "技术文档"
+            elif '问题' in doc and '答案' in doc:
+                doc_type = "FAQ问答"
+            elif '保修' in doc:
+                doc_type = "保修政策"
+            elif '使用技巧' in doc or '日常使用' in doc:
+                doc_type = "使用技巧"
+            elif '上传文档' in doc:
+                doc_type = "用户上传"
+            else:
+                doc_type = f"{category or '知识库'}文档"
+
+            sources.append({
+                "id": i + 1,
+                "type": doc_type,
+                "category": category or "知识库",
+                "relevance": f"{min(score, 100)}%"
+            })
+
+        return docs, sources
+
     def _create_system_message(self, intent: Intent) -> str:
         """根据意图创建系统提示词"""
 
@@ -173,23 +255,35 @@ class TCLProductAgent:
 
         return system_prompts.get(intent, system_prompts[Intent.GENERAL_CHAT])
 
-    def _build_context(self, user_input: str, intent: Intent) -> str:
-        """构建上下文信息（扩展版：包含产品数据+多格式文档）"""
+    def _build_context(self, user_input: str, intent: Intent) -> Tuple[str, List[Dict]]:
+        """
+        构建上下文信息（扩展版：包含产品数据+多格式文档+来源信息）
 
+        Returns:
+            Tuple[str, List[Dict]]: (上下文文本, 来源信息列表)
+        """
         context = ""
+        sources = []
 
         # 1. 搜索相关产品
         if intent in [Intent.PRODUCT_QUERY, Intent.RECOMMENDATION, Intent.COMPARISON]:
             products = search_product_by_keyword(user_input)
             if products:
                 context += f"\n【相关产品信息】\n"
-                for product in products[:3]:
-                    context += format_product_info(product) + "\n"
+                for i, product in enumerate(products[:3], 1):
+                    context += f"【产品{i}】\n{format_product_info(product)}\n"
+                    sources.append({
+                        "id": i,
+                        "type": "产品数据",
+                        "name": product.get('model', '未知型号'),
+                        "category": "产品库"
+                    })
 
-        # 2. 搜索多格式文档（PDF/MD/CSV中的相关内容）
-        relevant_docs = self._search_documents(user_input, max_results=2)
+        # 2. 搜索多格式文档（使用带来源的搜索）
+        relevant_docs, doc_sources = self._search_with_sources(user_input, max_results=3)
         if relevant_docs:
-            context += self._format_document_for_context(relevant_docs, max_docs=2)
+            context += self._format_document_for_context(relevant_docs, max_docs=3)
+            sources.extend(doc_sources)
 
         # 3. 推荐场景：列出所有产品
         if intent == Intent.RECOMMENDATION:
@@ -200,7 +294,7 @@ class TCLProductAgent:
                 for product in products:
                     context += f"- {product.get('model', '')}: {product.get('basic_params', {}).get('price_range', '')}\n"
 
-        return context
+        return context, sources
 
     def chat(self, user_input: str) -> str:
         """
@@ -210,20 +304,34 @@ class TCLProductAgent:
             user_input: 用户输入
 
         Returns:
-            str: Agent回复
+            str: Agent回复（包含来源引用）
         """
         try:
             # 1. 意图识别
             intent = self.intent_classifier.classify(user_input)
             logger.info(f"用户意图: {intent.value} - {user_input}")
 
-            # 2. 构建上下文
-            context = self._build_context(user_input, intent)
+            # 2. 构建上下文（包含来源信息）
+            context, sources = self._build_context(user_input, intent)
 
-            # 3. 构建消息
+            # 3. 修改系统提示词，要求引用来源
             system_prompt = self._create_system_message(intent)
+            if sources:
+                # 添加来源引用要求
+                source_ref_prompt = f"""
 
-            messages = [
+【来源引用要求】
+根据以下信息回答问题时，请务必在回答末尾引用来源：
+{self._format_sources(sources)}
+
+引用格式示例：
+📚 **参考来源**：
+- [1] 产品数据 - Q10L Pro
+- [2] 技术文档 - Mini LED原理"""
+                system_prompt += source_ref_prompt
+
+            # 4. 构建消息
+            messages: List = [
                 SystemMessage(content=system_prompt),
             ]
 
@@ -240,11 +348,15 @@ class TCLProductAgent:
 
             messages.append(HumanMessage(content=user_message))
 
-            # 4. 调用LLM
+            # 5. 调用LLM
             response = self.llm.invoke(messages)
             answer = response.content
 
-            # 5. 更新对话记忆
+            # 6. 如果没有来源，不添加引用；否则在末尾添加来源摘要
+            if sources and "参考来源" not in answer:
+                answer += self._format_sources_section(sources)
+
+            # 7. 更新对话记忆
             self.chat_history.append((user_input, answer))
 
             return answer
@@ -252,6 +364,42 @@ class TCLProductAgent:
         except Exception as e:
             logger.error(f"对话发生错误: {e}")
             return "抱歉，我遇到了一些问题，请稍后再试。"
+
+    def _format_sources(self, sources: List[Dict]) -> str:
+        """格式化来源信息（用于提示词）"""
+        lines = []
+        for src in sources[:5]:  # 最多显示5个来源
+            lines.append(f"- [{src.get('id', '?')}] {src.get('type', '文档')} - {src.get('name', src.get('category', '未知'))}")
+        return "\n".join(lines) if lines else "无"
+
+    def _format_sources_section(self, sources: List[Dict]) -> str:
+        """格式化来源信息（用于回答末尾）"""
+        if not sources:
+            return ""
+
+        section = "\n\n---\n📚 **参考来源**：\n"
+
+        # 去重并格式化
+        seen = set()
+        unique_sources = []
+        for src in sources[:5]:
+            key = f"{src.get('type')}_{src.get('name', src.get('category', ''))}"
+            if key not in seen:
+                seen.add(key)
+                unique_sources.append(src)
+
+        for src in unique_sources:
+            type_name = src.get('type', '文档')
+            name = src.get('name', src.get('category', '未知'))
+            relevance = src.get('relevance', '')
+            ref = f"【{src.get('id', '?')}】" if 'id' in src else ""
+
+            if relevance:
+                section += f"- {ref} {type_name} - {name} (相关度: {relevance})\n"
+            else:
+                section += f"- {ref} {type_name} - {name}\n"
+
+        return section
 
     def clear_history(self):
         """清除对话历史"""
