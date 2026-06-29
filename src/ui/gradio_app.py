@@ -15,6 +15,7 @@ class GradioInterface:
         """初始化界面"""
         self.agent = get_agent()
         self.chat_history: List[Dict] = []
+        self.uploaded_files_status = gr.State(value="暂无上传文档")
 
     def chat_response(self, user_input: str, history: List[Dict]) -> Tuple[str, List[Dict]]:
         """
@@ -50,6 +51,53 @@ class GradioInterface:
                 {"role": "assistant", "content": error_msg}
             ]
 
+    def handle_file_upload(self, file):
+        """
+        处理文件上传
+
+        Args:
+            file: 上传的文件对象
+
+        Returns:
+            str: 上传结果消息
+        """
+        if file is None:
+            return "⚠️ 未选择文件"
+
+        try:
+            # 读取文件内容
+            if hasattr(file, 'name'):
+                # 从文件路径读取
+                file_path = file.name
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                file_name = file_path.split('/')[-1]
+            else:
+                content = str(file)
+                file_name = "uploaded_file"
+
+            # 添加到Agent知识库
+            result = self.agent.add_document(file_name, content)
+
+            if result['success']:
+                uploaded_count = self.agent.get_uploaded_docs_count()
+                return f"""✅ 上传成功！
+
+📄 文件名: {file_name}
+📊 当前知识库文档数: {uploaded_count} 条
+
+文档已添加到知识库，现在可以询问相关内容了！"""
+
+            return f"""❌ 上传失败
+
+{result['message']}"""
+
+        except UnicodeDecodeError:
+            return "❌ 文件读取失败：无法识别的编码格式，请确保文件为UTF-8编码"
+        except Exception as e:
+            logger.error(f"文件上传处理失败: {e}")
+            return f"❌ 文件处理失败: {str(e)}"
+
     def clear_chat(self, history: List[Dict]) -> List[Dict]:
         """清除对话"""
         self.agent.clear_history()
@@ -70,11 +118,7 @@ class GradioInterface:
             - 📊 **产品对比**: 对比不同型号的参数和优缺点
             - 🔧 **故障排查**: 提供产品故障的自助排查建议
             - 💡 **使用技巧**: 获取产品使用和保养的专业建议
-
-            ### 使用提示
-            - 可以直接提问，例如："TCL 55Q10G Pro怎么样？"
-            - 可以描述需求，例如："预算5000元，买什么电视？"
-            - 可以要求对比，例如："55Q10G和55T7G哪个好？"
+            - 📤 **文档上传**: 支持上传JSON/MD/TXT文档，扩展知识库
             """)
 
             with gr.Row():
@@ -96,6 +140,40 @@ class GradioInterface:
                         clear_btn = gr.Button("清除对话", scale=1)
 
                 with gr.Column(scale=1):
+                    # 文档上传区域
+                    gr.Markdown("### 📤 文档上传")
+                    gr.Markdown("上传JSON/MD/TXT文档，自动添加到知识库")
+
+                    with gr.Accordion("支持格式", open=False):
+                        gr.Markdown("""
+                        - **JSON**: 产品数据、FAQ等结构化数据
+                        - **Markdown**: 技术文档、说明书等
+                        - **TXT**: 纯文本格式
+                        """)
+
+                    file_output = gr.Textbox(
+                        label="上传状态",
+                        lines=3,
+                        interactive=False,
+                        value="请上传文档..."
+                    )
+
+                    file_input = gr.File(
+                        label="选择文件",
+                        file_count="single",
+                        file_types=[".json", ".md", ".txt", ".csv"],
+                        height=100
+                    )
+
+                    upload_btn = gr.Button("上传到知识库", variant="primary")
+
+                    upload_btn.click(
+                        self.handle_file_upload,
+                        inputs=[file_input],
+                        outputs=[file_output]
+                    )
+
+                    # 快捷功能
                     gr.Markdown("### 快捷功能")
                     with gr.Accordion("产品类别", open=True):
                         tv_btn = gr.Button("📺 电视")

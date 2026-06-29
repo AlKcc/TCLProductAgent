@@ -258,6 +258,67 @@ class TCLProductAgent:
         self.chat_history = []
         logger.info("对话历史已清除")
 
+    def add_document(self, file_name: str, content: str, category: str = 'uploads') -> Dict:
+        """
+        添加上传的文档到知识库
+
+        Args:
+            file_name: 文件名
+            content: 文件内容
+            category: 文档类别，默认为'uploads'
+
+        Returns:
+            Dict: 操作结果
+        """
+        try:
+            # 如果documents中没有uploads类别，则创建
+            if 'uploads' not in self.documents:
+                self.documents['uploads'] = []
+
+            # 根据文件扩展名格式化内容
+            file_ext = file_name.lower().split('.')[-1] if '.' in file_name else ''
+
+            formatted_content = f"【上传文档】{file_name}\n{'-'*40}\n"
+
+            if file_ext in ['json']:
+                # 尝试解析JSON
+                import json
+                try:
+                    data = json.loads(content)
+                    if isinstance(data, list):
+                        for item in data:
+                            formatted_content += self.document_loader._format_json_item(item) + "\n"
+                    else:
+                        formatted_content += content
+                except:
+                    formatted_content += content
+            else:
+                # 其他格式直接添加
+                formatted_content += content[:5000]  # 限制长度
+
+            # 添加到文档库
+            self.documents['uploads'].append(formatted_content)
+            logger.info(f"已添加上传文档到知识库: {file_name}")
+
+            return {
+                "success": True,
+                "file_name": file_name,
+                "total_docs": len(self.documents['uploads']),
+                "message": f"文档 '{file_name}' 已成功添加到知识库！"
+            }
+
+        except Exception as e:
+            logger.error(f"添加文档失败: {e}")
+            return {
+                "success": False,
+                "file_name": file_name,
+                "message": f"添加文档失败: {str(e)}"
+            }
+
+    def get_uploaded_docs_count(self) -> int:
+        """获取已上传文档数量"""
+        return len(self.documents.get('uploads', []))
+
 
 # 创建全局Agent实例
 agent_instance = None

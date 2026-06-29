@@ -1,0 +1,24 @@
+[
+  {
+    "model": "测试产品X1",
+    "series": "测试系列",
+    "basic_params": {
+      "price_range": "3000-4000元",
+      "screen_size": "55英寸",
+      "resolution": "4K"
+    },
+    "description": "这是一款测试产品，用于验证文档上传功能。",
+    "features": ["智能语音", "HDR显示", "蓝牙连接"]
+  },
+  {
+    "model": "测试产品X2",
+    "series": "测试系列",
+    "basic_params": {
+      "price_range": "5000-6000元",
+      "screen_size": "65英寸",
+      "resolution": "4K"
+    },
+    "description": "另一款测试产品，具有更高配置。",
+    "features": ["8K解码", "MEMC防抖", "杜比音效"]
+  }
+]
