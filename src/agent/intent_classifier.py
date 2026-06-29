@@ -12,6 +12,7 @@ class Intent(Enum):
     COMPARISON = "comparison"            # 产品对比
     TROUBLESHOOTING = "troubleshooting"  # 故障排查
     TIPS = "tips"                        # 使用技巧
+    GREETING = "greeting"                # 问候寒暄
     GENERAL_CHAT = "general_chat"        # 日常闲聊
 
 
@@ -21,6 +22,10 @@ class IntentClassifier:
     def __init__(self):
         # 意图关键词映射
         self.intent_keywords = {
+            Intent.GREETING: [
+                "你好", "您好", "嗨", "hi", "hello", "早上好",
+                "下午好", "晚上好", "在吗", "有人在吗", "哈喽"
+            ],
             Intent.PRODUCT_QUERY: [
                 "参数", "型号", "怎么样", "好不好", "如何", "介绍",
                 "详细", "规格", "配置", "性能", "功能"
@@ -75,6 +80,7 @@ class IntentClassifier:
             Intent.COMPARISON: "产品对比",
             Intent.TROUBLESHOOTING: "故障排查",
             Intent.TIPS: "使用技巧",
+            Intent.GREETING: "问候寒暄",
             Intent.GENERAL_CHAT: "日常闲聊"
         }
         return descriptions.get(intent, "未知")

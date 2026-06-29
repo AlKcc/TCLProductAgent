@@ -35,12 +35,34 @@
       "网络接口",
       "光纤音频输出"
     ],
-    "suitable_for": ["豪华客厅", "家庭影院", "高端观影"],
-    "target_users": ["高端用户", "家庭影院发烧友", "画质追求极致者"],
-    "pros": ["6042个万象分区", "蝶翼华曜屏", "100%全面屏", "量子点技术"],
-    "cons": ["价格昂贵", "需要较大空间"],
+    "suitable_for": [
+      "豪华客厅",
+      "家庭影院",
+      "高端观影"
+    ],
+    "target_users": [
+      "高端用户",
+      "家庭影院发烧友",
+      "画质追求极致者"
+    ],
+    "pros": [
+      "6042个万象分区",
+      "蝶翼华曜屏",
+      "100%全面屏",
+      "量子点技术"
+    ],
+    "cons": [
+      "价格昂贵",
+      "需要较大空间"
+    ],
     "description": "Q10L Pro是TCL第四代液晶电视代表作，采用6042个万象分区控光，远超12000级普通分区控光效果。配备蝶翼华曜屏和极景·无黑边100%全面屏设计，带来极致视觉体验。",
-    "keywords": ["QD-Mini LED", "万象分区", "蝶翼华曜屏", "量子点", "98英寸"],
+    "keywords": [
+      "QD-Mini LED",
+      "万象分区",
+      "蝶翼华曜屏",
+      "量子点",
+      "98英寸"
+    ],
     "warranty": "整机1年，主要部件3年"
   },
   {
@@ -65,14 +87,37 @@
       "peak_brightness": "2000尼特",
       "screen_type": "蝶翼华曜屏"
     },
-    "smart_features": ["极景·无黑边100%全面屏", "AI画质优化", "杜比全景声"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["大客厅", "家庭影院"],
-    "target_users": ["大户型用户", "画质爱好者"],
-    "pros": ["5184个万象分区", "蝶翼华曜屏", "全面屏"],
-    "cons": ["价格较高"],
+    "smart_features": [
+      "极景·无黑边100%全面屏",
+      "AI画质优化",
+      "杜比全景声"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "大客厅",
+      "家庭影院"
+    ],
+    "target_users": [
+      "大户型用户",
+      "画质爱好者"
+    ],
+    "pros": [
+      "5184个万象分区",
+      "蝶翼华曜屏",
+      "全面屏"
+    ],
+    "cons": [
+      "价格较高"
+    ],
     "description": "85英寸Q10L Pro，5184个万象分区，带来细腻的控光效果和出色的对比度表现。",
-    "keywords": ["QD-Mini LED", "85英寸", "万象分区"],
+    "keywords": [
+      "QD-Mini LED",
+      "85英寸",
+      "万象分区"
+    ],
     "warranty": "整机1年，主要部件3年"
   },
   {
@@ -96,14 +141,38 @@
       "peak_brightness": "10000尼特",
       "screen_type": "绚彩XDR"
     },
-    "smart_features": ["极致控光", "AI画质引擎", "杜比全景声"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["豪华影院", "顶级客厅"],
-    "target_users": ["顶级用户", "影音发烧友"],
-    "pros": ["20736个万象分区", "100% BT.2020色域", "10000nits亮度"],
-    "cons": ["价格极高"],
+    "smart_features": [
+      "极致控光",
+      "AI画质引擎",
+      "杜比全景声"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "豪华影院",
+      "顶级客厅"
+    ],
+    "target_users": [
+      "顶级用户",
+      "影音发烧友"
+    ],
+    "pros": [
+      "20736个万象分区",
+      "100% BT.2020色域",
+      "10000nits亮度"
+    ],
+    "cons": [
+      "价格极高"
+    ],
     "description": "X11L是TCL旗舰级QD-Mini LED电视，拥有20736个万象分区和10000nits峰值亮度，100% BT.2020全局高色域，代表行业顶级水平。",
-    "keywords": ["QD-Mini LED", "旗舰", "20736分区", "10000nits"],
+    "keywords": [
+      "QD-Mini LED",
+      "旗舰",
+      "20736分区",
+      "10000nits"
+    ],
     "warranty": "整机1年，主要部件3年"
   },
   {
@@ -127,14 +196,42 @@
       "peak_brightness": "1300尼特",
       "screen_type": "A++广角超显屏"
     },
-    "smart_features": ["领曜芯片M2", "TXR画质增强引擎", "2.1声道Hi-Fi音响", "Dolby Vision·Atmos"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["大客厅", "游戏娱乐", "观影"],
-    "target_users": ["性价比用户", "游戏玩家", "家庭用户"],
-    "pros": ["330分区控光", "144Hz高刷", "96% DCI-P3色域", "性价比高"],
-    "cons": ["非Mini LED"],
+    "smart_features": [
+      "领曜芯片M2",
+      "TXR画质增强引擎",
+      "2.1声道Hi-Fi音响",
+      "Dolby Vision·Atmos"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "大客厅",
+      "游戏娱乐",
+      "观影"
+    ],
+    "target_users": [
+      "性价比用户",
+      "游戏玩家",
+      "家庭用户"
+    ],
+    "pros": [
+      "330分区控光",
+      "144Hz高刷",
+      "96% DCI-P3色域",
+      "性价比高"
+    ],
+    "cons": [
+      "非Mini LED"
+    ],
     "description": "T7H高画质真HDR电视，330分区精细控光，HDR 1300nits峰值亮度，96% DCI-P3电影级原色高色域，全通道4K 144Hz，是高性价比之选。",
-    "keywords": ["高画质", "144Hz", "330分区", "性价比"],
+    "keywords": [
+      "高画质",
+      "144Hz",
+      "330分区",
+      "性价比"
+    ],
     "warranty": "整机1年"
   },
   {
@@ -157,14 +254,37 @@
       "refresh_rate": "144Hz",
       "peak_brightness": "1100尼特"
     },
-    "smart_features": ["领曜芯片M2", "TXR画质增强引擎"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["客厅", "游戏", "观影"],
-    "target_users": ["家庭用户", "游戏玩家"],
-    "pros": ["220分区", "144Hz", "性价比"],
-    "cons": ["非Mini LED"],
+    "smart_features": [
+      "领曜芯片M2",
+      "TXR画质增强引擎"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "客厅",
+      "游戏",
+      "观影"
+    ],
+    "target_users": [
+      "家庭用户",
+      "游戏玩家"
+    ],
+    "pros": [
+      "220分区",
+      "144Hz",
+      "性价比"
+    ],
+    "cons": [
+      "非Mini LED"
+    ],
     "description": "75英寸T7H，220分区精细控光，1100nits峰值亮度，适合中等客厅使用。",
-    "keywords": ["75英寸", "高画质", "144Hz"],
+    "keywords": [
+      "75英寸",
+      "高画质",
+      "144Hz"
+    ],
     "warranty": "整机1年"
   },
   {
@@ -187,14 +307,37 @@
       "refresh_rate": "144Hz",
       "peak_brightness": "1100尼特"
     },
-    "smart_features": ["领曜芯片M2", "TXR画质增强引擎"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["客厅", "游戏", "观影"],
-    "target_users": ["家庭用户", "预算有限"],
-    "pros": ["160分区", "144Hz", "性价比高"],
-    "cons": ["非Mini LED"],
+    "smart_features": [
+      "领曜芯片M2",
+      "TXR画质增强引擎"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "客厅",
+      "游戏",
+      "观影"
+    ],
+    "target_users": [
+      "家庭用户",
+      "预算有限"
+    ],
+    "pros": [
+      "160分区",
+      "144Hz",
+      "性价比高"
+    ],
+    "cons": [
+      "非Mini LED"
+    ],
     "description": "65英寸T7H，160分区精细控光，是3000-4000元价位的高画质选择。",
-    "keywords": ["65英寸", "高画质", "性价比"],
+    "keywords": [
+      "65英寸",
+      "高画质",
+      "性价比"
+    ],
     "warranty": "整机1年"
   },
   {
@@ -217,14 +360,37 @@
       "refresh_rate": "120Hz",
       "peak_brightness": "3500尼特"
     },
-    "smart_features": ["典藏级影像", "AI画质", "杜比全景声"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["家庭影院", "豪华客厅"],
-    "target_users": ["高端用户", "影音爱好者"],
-    "pros": ["QD-Mini LED", "2160分区", "3500nits"],
-    "cons": ["价格较高"],
+    "smart_features": [
+      "典藏级影像",
+      "AI画质",
+      "杜比全景声"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "家庭影院",
+      "豪华客厅"
+    ],
+    "target_users": [
+      "高端用户",
+      "影音爱好者"
+    ],
+    "pros": [
+      "QD-Mini LED",
+      "2160分区",
+      "3500nits"
+    ],
+    "cons": [
+      "价格较高"
+    ],
     "description": "C12H灵悉QD-Mini LED电视，2160背光分区，XDR 3500nits峰值亮度，带来典藏级影像体验。",
-    "keywords": ["QD-Mini LED", "灵悉", "2160分区"],
+    "keywords": [
+      "QD-Mini LED",
+      "灵悉",
+      "2160分区"
+    ],
     "warranty": "整机1年，主要部件3年"
   },
   {
@@ -247,14 +413,37 @@
       "refresh_rate": "60Hz",
       "peak_brightness": "1000尼特"
     },
-    "smart_features": ["Local Dimming", "HDR 1000", "护眼模式"],
-    "interface": ["HDMI 2.0 x3", "USB 2.0 x2"],
-    "suitable_for": ["客厅", "日常观影"],
-    "target_users": ["家庭用户", "预算中等"],
-    "pros": ["百级分区", "1000nits", "95% DCI-P3"],
-    "cons": ["60Hz刷新率"],
+    "smart_features": [
+      "Local Dimming",
+      "HDR 1000",
+      "护眼模式"
+    ],
+    "interface": [
+      "HDMI 2.0 x3",
+      "USB 2.0 x2"
+    ],
+    "suitable_for": [
+      "客厅",
+      "日常观影"
+    ],
+    "target_users": [
+      "家庭用户",
+      "预算中等"
+    ],
+    "pros": [
+      "百级分区",
+      "1000nits",
+      "95% DCI-P3"
+    ],
+    "cons": [
+      "60Hz刷新率"
+    ],
     "description": "V8G百级分区高画质电视，Local Dimming百级分区背光，HDR 1000，95% DCI-P3电影级原色高色域，亮暗都清晰。",
-    "keywords": ["百级分区", "HDR 1000", "性价比"],
+    "keywords": [
+      "百级分区",
+      "HDR 1000",
+      "性价比"
+    ],
     "warranty": "整机1年"
   },
   {
@@ -275,14 +464,37 @@
       "color_gamut": "广色域",
       "refresh_rate": "120Hz"
     },
-    "smart_features": ["平板薄画框设计", "灵动落地架", "Ai Art名画创作"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["艺术客厅", "装饰展示"],
-    "target_users": ["追求设计感", "艺术爱好者"],
-    "pros": ["艺术设计", "Ai Art创作", "灵动落地架"],
-    "cons": ["价格较高"],
+    "smart_features": [
+      "平板薄画框设计",
+      "灵动落地架",
+      "Ai Art名画创作"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "艺术客厅",
+      "装饰展示"
+    ],
+    "target_users": [
+      "追求设计感",
+      "艺术爱好者"
+    ],
+    "pros": [
+      "艺术设计",
+      "Ai Art创作",
+      "灵动落地架"
+    ],
+    "cons": [
+      "价格较高"
+    ],
     "description": "A300 Pro第三代艺术电视，平板薄画框设计，灵动落地架，支持Ai Art名画创作，是艺术品与科技的完美结合。",
-    "keywords": ["艺术电视", "Ai Art", "薄画框"],
+    "keywords": [
+      "艺术电视",
+      "Ai Art",
+      "薄画框"
+    ],
     "warranty": "整机1年"
   },
   {
@@ -305,14 +517,36 @@
       "refresh_rate": "120Hz",
       "peak_brightness": "6500尼特"
     },
-    "smart_features": ["典藏级影像", "AI画质引擎"],
-    "interface": ["HDMI 2.1 x3", "USB 3.0 x2"],
-    "suitable_for": ["顶级家庭影院", "豪华客厅"],
-    "target_users": ["顶级用户", "影音发烧友"],
-    "pros": ["14112分区", "6500nits", "典藏级影像"],
-    "cons": ["价格极高"],
+    "smart_features": [
+      "典藏级影像",
+      "AI画质引擎"
+    ],
+    "interface": [
+      "HDMI 2.1 x3",
+      "USB 3.0 x2"
+    ],
+    "suitable_for": [
+      "顶级家庭影院",
+      "豪华客厅"
+    ],
+    "target_users": [
+      "顶级用户",
+      "影音发烧友"
+    ],
+    "pros": [
+      "14112分区",
+      "6500nits",
+      "典藏级影像"
+    ],
+    "cons": [
+      "价格极高"
+    ],
     "description": "X11H领曜QD-Mini LED电视，14112背光分区，XDR 6500nits，带来典藏级影像体验。",
-    "keywords": ["QD-Mini LED", "领曜", "14112分区"],
+    "keywords": [
+      "QD-Mini LED",
+      "领曜",
+      "14112分区"
+    ],
     "warranty": "整机1年，主要部件3年"
   }
 ]

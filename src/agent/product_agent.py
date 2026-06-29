@@ -2,6 +2,8 @@
 TCL产品Agent主逻辑
 """
 import os
+import random
+import re
 from typing import Optional, List, Dict, Tuple
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
@@ -285,14 +287,109 @@ class TCLProductAgent:
             context += self._format_document_for_context(relevant_docs, max_docs=3)
             sources.extend(doc_sources)
 
-        # 3. 推荐场景：列出所有产品
+        # 3. 推荐场景：智能筛选和排序相关产品
         if intent == Intent.RECOMMENDATION:
-            context += "\n【可用产品列表】\n"
+            # 提取用户需求中的关键信息
+            user_lower = user_input.lower()
+
+            # 智能识别产品类型
+            product_type = None
+            if any(kw in user_lower for kw in ['电视', 'tv', 'q10', 't7', 'q9', 'v8', 'p11']):
+                product_type = 'tv'
+            elif any(kw in user_lower for kw in ['空调', 'ac', '空调器']):
+                product_type = 'ac'
+            elif any(kw in user_lower for kw in ['冰箱', 'fridge', '冷藏']):
+                product_type = 'fridge'
+            elif any(kw in user_lower for kw in ['洗衣机', 'washer', '洗衣']):
+                product_type = 'washer'
+
+            # 提取价格范围
+            import re
+            price_pattern = r'(\d+)[-~到至](\d+)|(\d+)元|预算(\d+)|(\d+)左右'
+            price_match = re.search(price_pattern, user_lower)
+
+            min_price, max_price = None, None
+            if price_match:
+                if price_match.group(1) and price_match.group(2):
+                    min_price = int(price_match.group(1))
+                    max_price = int(price_match.group(2))
+                else:
+                    # 单个数字，设置±1000的范围
+                    price = int(price_match.group(3) or price_match.group(4) or price_match.group(5))
+                    min_price = max(0, price - 1000)
+                    max_price = price + 1000
+
+            # 智能筛选产品
+            filtered_products = []
             for category, products in self.products.items():
-                category_names = {'tv': '电视', 'ac': '空调', 'fridge': '冰箱', 'washer': '洗衣机'}
-                context += f"\n{category_names.get(category, category)}:\n"
+                if product_type and category != product_type:
+                    continue
+
                 for product in products:
-                    context += f"- {product.get('model', '')}: {product.get('basic_params', {}).get('price_range', '')}\n"
+                    relevance_score = 0
+
+                    # 价格匹配度
+                    if min_price and max_price:
+                        price_range = product.get('basic_params', {}).get('price_range', '')
+                        try:
+                            prices = price_range.replace('元', '').split('-')
+                            if len(prices) == 2:
+                                product_min = int(prices[0])
+                                product_max = int(prices[1])
+                                # 价格区间重叠度
+                                if product_max >= min_price and product_min <= max_price:
+                                    overlap = min(product_max, max_price) - max(product_min, min_price)
+                                    relevance_score += overlap / (max_price - min_price) * 50
+                        except:
+                            pass
+
+                    # 关键词匹配度
+                    product_text = f"{product.get('model', '')} {product.get('series', '')} {' '.join(product.get('keywords', []))}".lower()
+                    for word in user_lower.split():
+                        if word in product_text:
+                            relevance_score += 10
+
+                    if relevance_score > 0 or (not min_price and not product_type):
+                        filtered_products.append((relevance_score, product))
+
+            # 按相关度排序，只保留相关度高的产品
+            filtered_products.sort(key=lambda x: x[0], reverse=True)
+            top_products = [p for score, p in filtered_products[:5] if score > 0]
+
+            if top_products:
+                context += "\n【推荐产品列表】\n"
+                category_names = {'tv': '电视', 'ac': '空调', 'fridge': '冰箱', 'washer': '洗衣机'}
+                for i, product in enumerate(top_products, 1):
+                    model = product.get('model', '')
+                    price = product.get('basic_params', {}).get('price_range', '')
+                    category = None
+                    for cat, prods in self.products.items():
+                        if product in prods:
+                            category = cat
+                            break
+                    cat_name = category_names.get(category, '产品')
+                    context += f"{i}. {cat_name} - {model} ({price})\n"
+
+                # 只添加相关产品的来源信息
+                for i, product in enumerate(top_products[:3], 1):
+                    # 检查是否已经在sources中，避免重复
+                    model = product.get('model', '')
+                    if not any(src.get('name') == model for src in sources):
+                        sources.append({
+                            "id": len(sources) + 1,
+                            "type": "推荐产品",
+                            "name": model,
+                            "category": "产品库",
+                            "relevance": "高"
+                        })
+            else:
+                # 如果没有筛选出产品，列出所有产品
+                context += "\n【可用产品列表】\n"
+                for category, products in self.products.items():
+                    category_names = {'tv': '电视', 'ac': '空调', 'fridge': '冰箱', 'washer': '洗衣机'}
+                    context += f"\n{category_names.get(category, category)}:\n"
+                    for product in products:
+                        context += f"- {product.get('model', '')}: {product.get('basic_params', {}).get('price_range', '')}\n"
 
         return context, sources
 
@@ -311,18 +408,46 @@ class TCLProductAgent:
             intent = self.intent_classifier.classify(user_input)
             logger.info(f"用户意图: {intent.value} - {user_input}")
 
-            # 2. 构建上下文（包含来源信息）
+            # 2. 如果是问候类意图，直接返回友好回复（不搜索文档）
+            if intent == Intent.GREETING:
+                greetings = [
+                    "您好！我是TCL产品智能助手，很高兴为您服务。有什么关于TCL产品的问题我可以帮您解答？",
+                    "你好！我是TCL产品咨询专家，可以为您解答关于TCL电视、空调、冰箱、洗衣机等产品的任何问题。",
+                    "您好！有什么关于TCL产品的问题想了解吗？我可以为您提供产品查询、推荐、对比等服务。"
+                ]
+                return random.choice(greetings)
+
+            # 3. 构建上下文（包含来源信息）
             context, sources = self._build_context(user_input, intent)
 
-            # 3. 修改系统提示词，要求引用来源
+            # 4. 过滤低相关度来源（低于10%的来源不展示）
+            min_relevance = 10
+            filtered_sources = []
+            for src in sources:
+                relevance = src.get('relevance', '')
+                if relevance:
+                    try:
+                        relevance_num = int(relevance.replace('%', ''))
+                        if relevance_num >= min_relevance:
+                            filtered_sources.append(src)
+                    except:
+                        filtered_sources.append(src)
+                else:
+                    filtered_sources.append(src)
+
+            # 5. 重新分配连续编号
+            for i, src in enumerate(filtered_sources, 1):
+                src['id'] = i
+
+            # 5. 修改系统提示词，要求引用来源
             system_prompt = self._create_system_message(intent)
-            if sources:
+            if filtered_sources:
                 # 添加来源引用要求
                 source_ref_prompt = f"""
 
 【来源引用要求】
 根据以下信息回答问题时，请务必在回答末尾引用来源：
-{self._format_sources(sources)}
+{self._format_sources(filtered_sources)}
 
 引用格式示例：
 📚 **参考来源**：
@@ -330,7 +455,7 @@ class TCLProductAgent:
 - [2] 技术文档 - Mini LED原理"""
                 system_prompt += source_ref_prompt
 
-            # 4. 构建消息
+            # 6. 构建消息
             messages: List = [
                 SystemMessage(content=system_prompt),
             ]
@@ -348,15 +473,15 @@ class TCLProductAgent:
 
             messages.append(HumanMessage(content=user_message))
 
-            # 5. 调用LLM
+            # 7. 调用LLM
             response = self.llm.invoke(messages)
             answer = response.content
 
-            # 6. 如果没有来源，不添加引用；否则在末尾添加来源摘要
-            if sources and "参考来源" not in answer:
-                answer += self._format_sources_section(sources)
+            # 8. 如果没有来源，不添加引用；否则在末尾添加来源摘要
+            if filtered_sources and "参考来源" not in answer:
+                answer += self._format_sources_section(filtered_sources)
 
-            # 7. 更新对话记忆
+            # 8. 更新对话记忆
             self.chat_history.append((user_input, answer))
 
             return answer
@@ -379,7 +504,7 @@ class TCLProductAgent:
 
         section = "\n\n---\n📚 **参考来源**：\n"
 
-        # 去重并格式化
+        # 去重并重新编号
         seen = set()
         unique_sources = []
         for src in sources[:5]:
@@ -388,16 +513,16 @@ class TCLProductAgent:
                 seen.add(key)
                 unique_sources.append(src)
 
-        for src in unique_sources:
+        # 重新连续编号
+        for i, src in enumerate(unique_sources, 1):
             type_name = src.get('type', '文档')
             name = src.get('name', src.get('category', '未知'))
             relevance = src.get('relevance', '')
-            ref = f"【{src.get('id', '?')}】" if 'id' in src else ""
 
             if relevance:
-                section += f"- {ref} {type_name} - {name} (相关度: {relevance})\n"
+                section += f"- [{i}] {type_name} - {name} (相关度: {relevance})\n"
             else:
-                section += f"- {ref} {type_name} - {name}\n"
+                section += f"- [{i}] {type_name} - {name}\n"
 
         return section
 

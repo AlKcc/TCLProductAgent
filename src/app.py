@@ -5,6 +5,27 @@ import os
 import sys
 from pathlib import Path
 
+# 检查模型缓存
+MODEL_CACHE = Path.home() / '.cache' / 'huggingface' / 'hub' / 'models--sentence-transformers--all-MiniLM-L6-v2'
+if not MODEL_CACHE.exists():
+    print("\n" + "=" * 50)
+    print("⚠️  模型未缓存，需要先下载")
+    print("=" * 50)
+    print("\n请先开启代理，然后运行以下命令下载模型：")
+    print("\n  python -c \"from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')\"")
+    print("\n或者设置国内镜像加速：")
+    print("  pip install -U langchain-huggingface")
+    print("  export HF_ENDPOINT=https://hf-mirror.com")
+    print("  python -c \"from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='all-MiniLM-L6-v2')\"")
+    print("\n下载完成后再运行本程序")
+    sys.exit(1)
+
+# 设置no_proxy环境变量，避免localhost连接被代理拦截
+current_no_proxy = os.environ.get('no_proxy', '')
+localhosts = 'localhost,127.0.0.1,0.0.0.0'
+os.environ['no_proxy'] = f"{localhosts},{current_no_proxy}" if current_no_proxy else localhosts
+os.environ['NO_PROXY'] = f"{localhosts},{os.environ.get('NO_PROXY', '')}" if os.environ.get('NO_PROXY') else localhosts
+
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
