@@ -305,26 +305,21 @@ class TCLProductAgent:
 
         docs = [doc for _, doc, _ in scored_results[:max_results]]
 
-        # 生成来源信息
+        # 生成来源信息（直接显示文件名）
+        category_names = {
+            'products': '产品数据.json',
+            'docs': '技术文档.md',
+            'faq': 'FAQ问答.json',
+            'tips': '使用技巧.json'
+        }
+
         for i, (score, doc, category) in enumerate(scored_results[:max_results]):
-            if '产品型号' in doc or '型号' in doc:
-                doc_type = "产品参数"
-            elif '技术原理' in doc or '原理' in doc:
-                doc_type = "技术文档"
-            elif '问题' in doc and '答案' in doc:
-                doc_type = "FAQ问答"
-            elif '保修' in doc:
-                doc_type = "保修政策"
-            elif '使用技巧' in doc or '日常使用' in doc:
-                doc_type = "使用技巧"
-            elif '上传文档' in doc:
-                doc_type = "用户上传"
-            else:
-                doc_type = f"{category or '知识库'}文档"
+            file_name = category_names.get(category, f"{category or '知识库'}.json")
 
             sources.append({
                 "id": i + 1,
-                "type": doc_type,
+                "type": "文档",
+                "name": file_name,
                 "category": category or "知识库",
                 "relevance": f"{min(score, 100)}%"
             })
@@ -417,6 +412,15 @@ class TCLProductAgent:
         if relevant_docs:
             context += self._format_document_for_context(relevant_docs, max_docs=3)
             sources.extend(doc_sources)
+        else:
+            # 如果没有找到文档，添加默认来源
+            sources.append({
+                "id": len(sources) + 1,
+                "type": "知识库",
+                "name": "知识库数据",
+                "category": "产品库",
+                "relevance": "相关"
+            })
 
         # 3. 推荐场景：智能筛选和排序相关产品
         if intent == Intent.RECOMMENDATION:
@@ -593,39 +597,15 @@ class TCLProductAgent:
             # 4. 构建上下文（包含来源信息）
             context, sources = self._build_context(user_input, intent)
 
-            # 5. 过滤低相关度来源（低于10%的来源不展示）
-            min_relevance = 10
-            filtered_sources = []
-            for src in sources:
-                relevance = src.get('relevance', '')
-                if relevance:
-                    try:
-                        relevance_num = int(relevance.replace('%', ''))
-                        if relevance_num >= min_relevance:
-                            filtered_sources.append(src)
-                    except:
-                        filtered_sources.append(src)
-                else:
-                    filtered_sources.append(src)
+            # 5. 保留所有来源（不再过滤低相关度来源）
+            filtered_sources = sources.copy()
 
             # 6. 重新分配连续编号
             for i, src in enumerate(filtered_sources, 1):
                 src['id'] = i
 
-            # 7. 修改系统提示词，要求引用来源
+            # 7. 创建系统提示词（不再要求LLM生成来源）
             system_prompt = self._create_system_message(intent)
-            if filtered_sources:
-                source_ref_prompt = f"""
-
-【来源引用要求】
-根据以下信息回答问题时，请务必在回答末尾引用来源：
-{self._format_sources(filtered_sources)}
-
-引用格式示例：
-📚 **参考来源**：
-- [1] 产品数据 - Q10L Pro
-- [2] 技术文档 - Mini LED原理"""
-                system_prompt += source_ref_prompt
 
             # 8. 构建消息
             messages: List = [
@@ -649,13 +629,13 @@ class TCLProductAgent:
             response = self.llm.invoke(messages)
             answer = response.content
 
-            # 10. 如果没有来源，不添加引用；否则在末尾添加来源摘要
-            if filtered_sources and "参考来源" not in answer:
+            # 10. 强制添加来源摘要（确保每个回答都有来源）
+            if filtered_sources:
                 answer += self._format_sources_section(filtered_sources)
 
             # 11. 将最终回答存入缓存
             self.answer_cache.set(answer_cache_key, answer)
-            logger.info(f"LLM回答已缓存: {user_input}")
+            logger.info(f"✅ LLM回答已存入缓存: {user_input}")
 
             # 12. 更新对话记忆并限制长度
             self.chat_history.append((user_input, answer))
@@ -676,35 +656,36 @@ class TCLProductAgent:
         """格式化来源信息（用于提示词）"""
         lines = []
         for src in sources[:5]:  # 最多显示5个来源
-            lines.append(f"- [{src.get('id', '?')}] {src.get('type', '文档')} - {src.get('name', src.get('category', '未知'))}")
+            lines.append(f"- [{src.get('id', '?')}] {src.get('name', src.get('category', '未知'))}")
         return "\n".join(lines) if lines else "无"
 
     def _format_sources_section(self, sources: List[Dict]) -> str:
-        """格式化来源信息（用于回答末尾）"""
+        """格式化来源信息（用于回答末尾）- 统一格式显示"""
         if not sources:
             return ""
 
         section = "\n\n---\n📚 **参考来源**：\n"
 
-        # 去重并重新编号
         seen = set()
         unique_sources = []
         for src in sources[:5]:
-            key = f"{src.get('type')}_{src.get('name', src.get('category', ''))}"
+            key = src.get('name', src.get('category', '未知'))
             if key not in seen:
                 seen.add(key)
                 unique_sources.append(src)
 
-        # 重新连续编号
         for i, src in enumerate(unique_sources, 1):
-            type_name = src.get('type', '文档')
             name = src.get('name', src.get('category', '未知'))
-            relevance = src.get('relevance', '')
-
-            if relevance:
-                section += f"- [{i}] {type_name} - {name} (相关度: {relevance})\n"
-            else:
-                section += f"- [{i}] {type_name} - {name}\n"
+            
+            name = name.replace('.json', '').replace('.md', '')
+            
+            prefixes_to_remove = ['产品数据 - ', '技术文档 - ', 'FAQ问答 - ', '使用技巧 - ', '推荐产品 - ', '文档 - ']
+            for prefix in prefixes_to_remove:
+                if prefix in name:
+                    name = name.split(prefix, 1)[1]
+                    break
+            
+            section += f"- [{i}] {name}\n"
 
         return section
 

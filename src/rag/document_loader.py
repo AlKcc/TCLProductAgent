@@ -1,7 +1,7 @@
 """
 文档加载模块 - 支持多格式文档
 """
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 
 
