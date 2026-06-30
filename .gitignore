@@ -25,6 +25,8 @@ venv/
 env/
 ENV/
 .venv
+trae-agent-env/
+agent_env/
 
 # IDE
 .vscode/
@@ -46,6 +48,7 @@ logs/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+*.ipynb
 
 # 测试覆盖率
 .coverage
@@ -55,7 +58,11 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+test_upload.json
 
 # Agent追踪
 *.agent/
 *.workspace/
+
+# HuggingFace缓存
+.cache/
