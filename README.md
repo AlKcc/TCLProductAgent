@@ -177,6 +177,7 @@ pip install -r requirements.txt
 # 复制环境变量模板（已包含默认API密钥，可直接使用）
 cp .env.example .env
 
+# 默认API密钥：967bf1087dbc4faca0c8286443b5d7a5.Oys89JDnjgfe86ja
 # 如果需要使用自己的API密钥，编辑.env文件
 # ZHIPUAI_API_KEY=your_api_key_here
 ```
