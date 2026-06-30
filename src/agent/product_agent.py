@@ -118,7 +118,7 @@ class TCLProductAgent:
 
         # 初始化对话记忆（使用列表，兼容LangChain消息格式）
         self.chat_history = []
-        self.max_history_length = 20
+        self.max_history_length = Config.MAX_HISTORY_LENGTH
 
         # 加载产品数据（带文件哈希校验缓存）
         self.products = load_all_products()
@@ -130,11 +130,17 @@ class TCLProductAgent:
         self.documents = self._load_documents()
         logger.info(f"加载多格式文档: {sum(len(v) for v in self.documents.values())} 条")
 
-        # 关键词搜索结果缓存（5分钟过期，最多50条）
-        self.search_cache = LRUCacheWithTTL(max_size=50, ttl_seconds=300)
+        # 关键词搜索结果缓存（从配置读取）
+        self.search_cache = LRUCacheWithTTL(
+            max_size=int(Config.CACHE_MAX_SIZE / 2),
+            ttl_seconds=Config.CACHE_TTL_SECONDS
+        )
 
-        # LLM最终回答缓存（5分钟过期，最多100条，最大性能提升点）
-        self.answer_cache = LRUCacheWithTTL(max_size=100, ttl_seconds=300)
+        # LLM最终回答缓存（从配置读取，最大性能提升点）
+        self.answer_cache = LRUCacheWithTTL(
+            max_size=Config.CACHE_MAX_SIZE,
+            ttl_seconds=Config.CACHE_TTL_SECONDS
+        )
 
         # 初始化LangChain RAG（尝试语义检索，失败则自动降级）
         self.langchain_rag = None
