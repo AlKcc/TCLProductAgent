@@ -4,7 +4,11 @@ TCL产品Agent主逻辑
 import os
 import random
 import re
+import time
+import hashlib
+import difflib
 from typing import Optional, List, Dict, Tuple
+from collections import OrderedDict
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
@@ -16,8 +20,77 @@ from ..utils.helpers import (
     format_comparison_table
 )
 from ..rag.document_loader import DocumentLoader
-from ..rag.langchain_rag import LangChainRAG
+from ..rag.langchain_rag import LangChainRAG, LRUCacheWithTTL
 from .intent_classifier import Intent, IntentClassifier, intent_classifier
+
+
+def compute_file_hash(filepath: str) -> str:
+    """计算文件SHA256哈希值"""
+    sha256_hash = hashlib.sha256()
+    try:
+        with open(filepath, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b''):
+                sha256_hash.update(chunk)
+        return sha256_hash.hexdigest()
+    except Exception:
+        return ""
+
+
+def compute_directory_hash(directory: str) -> str:
+    """计算目录下所有文件的综合哈希值"""
+    hashes = []
+    for root, dirs, files in os.walk(directory):
+        for filename in sorted(files):
+            filepath = os.path.join(root, filename)
+            file_hash = compute_file_hash(filepath)
+            if file_hash:
+                hashes.append(f"{filepath}:{file_hash}")
+    return hashlib.sha256("\n".join(hashes).encode()).hexdigest()
+
+
+def extract_keywords(query: str) -> set:
+    """提取查询中的关键词（中文字符+英文单词+数字）"""
+    keywords = set()
+
+    # 提取中文单个字符
+    for char in query:
+        if '\u4e00' <= char <= '\u9fff':
+            keywords.add(char)
+
+    # 提取英文单词和数字
+    for word in re.findall(r'[a-zA-Z0-9]+', query.lower()):
+        keywords.add(word)
+
+    return keywords
+
+
+def compute_similarity(query1: str, query2: str) -> float:
+    """
+    计算两个查询的相似度（结合文本相似度和关键词重叠）
+
+    Returns:
+        float: 0.0 - 1.0 之间的相似度
+    """
+    # 文本相似度
+    text_sim = difflib.SequenceMatcher(None, query1.lower(), query2.lower()).ratio()
+
+    # 关键词相似度
+    keywords1 = extract_keywords(query1)
+    keywords2 = extract_keywords(query2)
+
+    if not keywords1 and not keywords2:
+        keyword_sim = 0.0
+    elif not keywords1 or not keywords2:
+        keyword_sim = 0.0
+    else:
+        intersection = len(keywords1 & keywords2)
+        union = len(keywords1 | keywords2)
+        keyword_sim = intersection / union if union > 0 else 0.0
+
+    # 综合相似度（关键词权重更高）
+    similarity = text_sim * 0.4 + keyword_sim * 0.6
+
+    return similarity
 
 
 class TCLProductAgent:
@@ -45,28 +118,50 @@ class TCLProductAgent:
 
         # 初始化对话记忆（使用列表，兼容LangChain消息格式）
         self.chat_history = []
+        self.max_history_length = 20
 
-        # 加载产品数据
+        # 加载产品数据（带文件哈希校验缓存）
         self.products = load_all_products()
         logger.info(f"TCL产品Agent初始化完成，加载产品数据 {sum(len(v) for v in self.products.values())} 款")
 
-        # 加载多格式文档（PDF/MD/CSV）
+        # 加载多格式文档（PDF/MD/CSV，带文件哈希校验缓存）
         self.document_loader = DocumentLoader()
+        self._last_data_hash = ""
         self.documents = self._load_documents()
         logger.info(f"加载多格式文档: {sum(len(v) for v in self.documents.values())} 条")
+
+        # 关键词搜索结果缓存（5分钟过期，最多50条）
+        self.search_cache = LRUCacheWithTTL(max_size=50, ttl_seconds=300)
+
+        # LLM最终回答缓存（5分钟过期，最多100条，最大性能提升点）
+        self.answer_cache = LRUCacheWithTTL(max_size=100, ttl_seconds=300)
 
         # 初始化LangChain RAG（尝试语义检索，失败则自动降级）
         self.langchain_rag = None
         try:
             self.langchain_rag = LangChainRAG(self.llm)
-            logger.info("LangChain RAG语义检索已启用")
+            # 检查RAG是否真的可用（初始化可能超时但对象仍存在）
+            if not self.langchain_rag.retriever:
+                self.langchain_rag = None
+                logger.info("LangChain RAG初始化超时，使用关键词检索作为fallback")
+            else:
+                logger.info("LangChain RAG语义检索已启用")
         except Exception as e:
+            self.langchain_rag = None
             logger.warning(f"LangChain RAG初始化失败，使用关键词检索作为fallback: {e}")
 
     def _load_documents(self) -> dict:
-        """加载所有格式的文档"""
+        """加载所有格式的文档（带文件哈希校验缓存）"""
+        current_hash = compute_directory_hash(DATA_DIR)
+
+        # 如果数据目录内容没有变化，跳过重新加载
+        if current_hash and current_hash == self._last_data_hash:
+            logger.debug("数据目录内容未变化，使用缓存文档")
+            return self.documents if hasattr(self, 'documents') else {'products': [], 'docs': [], 'faq': [], 'tips': []}
+
         try:
             docs = self.document_loader.load_all_knowledge(DATA_DIR)
+            self._last_data_hash = current_hash
             logger.info("多格式文档加载成功")
             return docs
         except Exception as e:
@@ -85,13 +180,23 @@ class TCLProductAgent:
         return context
 
     def _search_documents(self, query: str, max_results: int = 3) -> List[str]:
-        """搜索相关文档（优先使用LangChain语义检索，失败则使用关键词检索）"""
-        # 优先尝试LangChain语义检索
+        """搜索相关文档（优先使用LangChain语义检索，失败则使用关键词检索，带缓存）"""
+        # 构建缓存key
+        cache_key = f"search_{query}_{max_results}"
+
+        # 先尝试从缓存获取
+        cached_result = self.search_cache.get(cache_key)
+        if cached_result is not None:
+            logger.debug(f"关键词搜索命中缓存: {query}")
+            return cached_result
+
+        # 优先尝试LangChain语义检索（已自带缓存）
         if self.langchain_rag:
             try:
                 docs = self.langchain_rag.retrieve(query, k=max_results)
                 if docs:
                     logger.debug(f"LangChain语义检索成功，找到 {len(docs)} 条文档")
+                    self.search_cache.set(cache_key, docs)
                     return docs
             except Exception as e:
                 logger.warning(f"LangChain语义检索失败，切换到关键词检索: {e}")
@@ -120,11 +225,17 @@ class TCLProductAgent:
 
         scored_results.sort(key=lambda x: x[0], reverse=True)
 
-        return [doc for _, doc in scored_results[:max_results]]
+        results = [doc for _, doc in scored_results[:max_results]]
+
+        # 将结果存入缓存
+        self.search_cache.set(cache_key, results)
+        logger.debug(f"关键词搜索结果已缓存: {query}")
+
+        return results
 
     def _search_with_sources(self, query: str, max_results: int = 3) -> Tuple[List[str], List[Dict]]:
         """
-        搜索相关文档并返回来源信息
+        搜索相关文档并返回来源信息（带缓存）
 
         Args:
             query: 查询内容
@@ -133,9 +244,18 @@ class TCLProductAgent:
         Returns:
             Tuple[List[str], List[Dict]]: (文档内容列表, 来源信息列表)
         """
+        # 构建缓存key
+        cache_key = f"search_with_sources_{query}_{max_results}"
+
+        # 先尝试从缓存获取
+        cached_result = self.search_cache.get(cache_key)
+        if cached_result is not None:
+            logger.debug(f"搜索带来源命中缓存: {query}")
+            return cached_result
+
         sources = []
 
-        # 优先尝试LangChain语义检索
+        # 优先尝试LangChain语义检索（已自带缓存）
         if self.langchain_rag:
             try:
                 docs = self.langchain_rag.retrieve(query, k=max_results)
@@ -147,6 +267,8 @@ class TCLProductAgent:
                             "type": "文档",
                             "category": "语义检索"
                         })
+                    # 将结果存入缓存
+                    self.search_cache.set(cache_key, (docs, sources))
                     return docs, sources
             except Exception as e:
                 logger.warning(f"LangChain语义检索失败，切换到关键词检索: {e}")
@@ -179,7 +301,6 @@ class TCLProductAgent:
 
         # 生成来源信息
         for i, (score, doc, category) in enumerate(scored_results[:max_results]):
-            # 根据文档内容判断来源类型
             if '产品型号' in doc or '型号' in doc:
                 doc_type = "产品参数"
             elif '技术原理' in doc or '原理' in doc:
@@ -201,6 +322,10 @@ class TCLProductAgent:
                 "category": category or "知识库",
                 "relevance": f"{min(score, 100)}%"
             })
+
+        # 将结果存入缓存
+        self.search_cache.set(cache_key, (docs, sources))
+        logger.debug(f"搜索带来源结果已缓存: {query}")
 
         return docs, sources
 
@@ -395,7 +520,7 @@ class TCLProductAgent:
 
     def chat(self, user_input: str) -> str:
         """
-        与Agent对话
+        与Agent对话（带LLM回答缓存）
 
         Args:
             user_input: 用户输入
@@ -417,10 +542,52 @@ class TCLProductAgent:
                 ]
                 return random.choice(greetings)
 
-            # 3. 构建上下文（包含来源信息）
+            # 3. 尝试从LLM回答缓存获取（支持相似度匹配，最大性能提升点）
+            cached_answer = None
+            cache_match_info = ""
+
+            # 先尝试完全匹配
+            answer_cache_key = f"answer_{user_input}"
+            exact_match = self.answer_cache.get(answer_cache_key)
+            if exact_match is not None:
+                cached_answer = exact_match
+                cache_match_info = f"完全匹配: {user_input}"
+
+            # 如果没有完全匹配，尝试相似度匹配
+            if cached_answer is None:
+                best_similarity = 0.0
+                best_match_key = None
+
+                # 遍历缓存寻找相似查询
+                for cache_key in list(self.answer_cache.cache.keys()):
+                    # 缓存key格式: "answer_{原始查询}"
+                    if cache_key.startswith("answer_"):
+                        cached_query = cache_key[7:]  # 去掉"answer_"前缀
+                        similarity = compute_similarity(user_input, cached_query)
+
+                        if similarity > best_similarity:
+                            best_similarity = similarity
+                            best_match_key = cache_key
+
+                # 如果相似度超过阈值（0.6），使用缓存答案
+                if best_similarity >= 0.6 and best_match_key:
+                    cached_answer = self.answer_cache.get(best_match_key)
+                    cache_match_info = f"相似度匹配({best_similarity:.2f}): '{user_input}' ~ '{best_match_key[7:]}'"
+
+            if cached_answer is not None:
+                logger.info(f"LLM回答命中缓存 - {cache_match_info}")
+
+                # 将当前查询也存入缓存，指向同一个答案
+                self.answer_cache.set(answer_cache_key, cached_answer)
+
+                self.chat_history.append((user_input, cached_answer))
+                self._trim_history()
+                return cached_answer
+
+            # 4. 构建上下文（包含来源信息）
             context, sources = self._build_context(user_input, intent)
 
-            # 4. 过滤低相关度来源（低于10%的来源不展示）
+            # 5. 过滤低相关度来源（低于10%的来源不展示）
             min_relevance = 10
             filtered_sources = []
             for src in sources:
@@ -435,14 +602,13 @@ class TCLProductAgent:
                 else:
                     filtered_sources.append(src)
 
-            # 5. 重新分配连续编号
+            # 6. 重新分配连续编号
             for i, src in enumerate(filtered_sources, 1):
                 src['id'] = i
 
-            # 5. 修改系统提示词，要求引用来源
+            # 7. 修改系统提示词，要求引用来源
             system_prompt = self._create_system_message(intent)
             if filtered_sources:
-                # 添加来源引用要求
                 source_ref_prompt = f"""
 
 【来源引用要求】
@@ -455,12 +621,12 @@ class TCLProductAgent:
 - [2] 技术文档 - Mini LED原理"""
                 system_prompt += source_ref_prompt
 
-            # 6. 构建消息
+            # 8. 构建消息
             messages: List = [
                 SystemMessage(content=system_prompt),
             ]
 
-            # 添加对话历史
+            # 添加对话历史（只取最近5条，避免token过多）
             for human_msg, ai_msg in self.chat_history[-5:]:
                 messages.append(HumanMessage(content=human_msg))
                 messages.append(AIMessage(content=ai_msg))
@@ -473,22 +639,32 @@ class TCLProductAgent:
 
             messages.append(HumanMessage(content=user_message))
 
-            # 7. 调用LLM
+            # 9. 调用LLM
             response = self.llm.invoke(messages)
             answer = response.content
 
-            # 8. 如果没有来源，不添加引用；否则在末尾添加来源摘要
+            # 10. 如果没有来源，不添加引用；否则在末尾添加来源摘要
             if filtered_sources and "参考来源" not in answer:
                 answer += self._format_sources_section(filtered_sources)
 
-            # 8. 更新对话记忆
+            # 11. 将最终回答存入缓存
+            self.answer_cache.set(answer_cache_key, answer)
+            logger.info(f"LLM回答已缓存: {user_input}")
+
+            # 12. 更新对话记忆并限制长度
             self.chat_history.append((user_input, answer))
+            self._trim_history()
 
             return answer
 
         except Exception as e:
             logger.error(f"对话发生错误: {e}")
             return "抱歉，我遇到了一些问题，请稍后再试。"
+
+    def _trim_history(self):
+        """限制对话历史长度，避免内存和token膨胀"""
+        if len(self.chat_history) > self.max_history_length:
+            self.chat_history = self.chat_history[-self.max_history_length:]
 
     def _format_sources(self, sources: List[Dict]) -> str:
         """格式化来源信息（用于提示词）"""

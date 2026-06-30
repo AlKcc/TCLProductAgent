@@ -4,7 +4,9 @@ LangChain 1.x 现代API实现
 """
 import threading
 import time
-from typing import List, Dict, Any
+import hashlib
+from typing import List, Dict, Any, Optional
+from collections import OrderedDict
 from langchain_chroma import Chroma
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.documents import Document
@@ -17,6 +19,59 @@ from ..utils.logger import logger
 from .document_loader import DocumentLoader
 
 
+class LRUCacheWithTTL:
+    """带TTL过期的LRU缓存"""
+
+    def __init__(self, max_size: int = 100, ttl_seconds: int = 300):
+        """
+        初始化缓存
+
+        Args:
+            max_size: 最大缓存条目数
+            ttl_seconds: 过期时间（秒），默认5分钟
+        """
+        self.cache = OrderedDict()
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+
+    def _normalize_key(self, key: str) -> str:
+        """归一化key（去空格、小写）"""
+        return key.strip().lower()
+
+    def get(self, key: str) -> Optional[Any]:
+        """获取缓存值"""
+        normalized_key = self._normalize_key(key)
+        if normalized_key not in self.cache:
+            return None
+
+        item = self.cache[normalized_key]
+        if time.time() > item['expire_time']:
+            del self.cache[normalized_key]
+            return None
+
+        self.cache.move_to_end(normalized_key)
+        return item['value']
+
+    def set(self, key: str, value: Any):
+        """设置缓存值"""
+        normalized_key = self._normalize_key(key)
+        self.cache[normalized_key] = {
+            'value': value,
+            'expire_time': time.time() + self.ttl_seconds
+        }
+
+        if len(self.cache) > self.max_size:
+            self.cache.popitem(last=False)
+
+    def clear(self):
+        """清空缓存"""
+        self.cache.clear()
+
+    def __len__(self):
+        """返回缓存条目数"""
+        return len(self.cache)
+
+
 class LangChainRAG:
     """基于LangChain的RAG检索系统"""
 
@@ -26,6 +81,9 @@ class LangChainRAG:
         self.retriever = None
         self.qa_chain = None
         self._init_rag_with_timeout()
+
+        # RAG检索结果缓存（5分钟过期，最多100条）
+        self.retrieve_cache = LRUCacheWithTTL(max_size=100, ttl_seconds=300)
 
     def _init_rag_with_timeout(self):
         """带超时限制的RAG初始化"""
@@ -123,13 +181,28 @@ class LangChainRAG:
             logger.error(f"加载文档失败: {e}")
 
     def retrieve(self, query: str, k: int = 3) -> List[str]:
-        """检索相关文档"""
+        """检索相关文档（带缓存）"""
         if not self.retriever:
             return []
 
+        # 构建缓存key（包含k参数）
+        cache_key = f"{query}_{k}"
+
+        # 先尝试从缓存获取
+        cached_result = self.retrieve_cache.get(cache_key)
+        if cached_result is not None:
+            logger.debug(f"RAG检索命中缓存: {query}")
+            return cached_result
+
         try:
             results = self.retriever.invoke(query)
-            return [doc.page_content for doc in results]
+            page_contents = [doc.page_content for doc in results]
+
+            # 将结果存入缓存
+            self.retrieve_cache.set(cache_key, page_contents)
+            logger.debug(f"RAG检索结果已缓存: {query}")
+
+            return page_contents
         except Exception as e:
             logger.error(f"检索失败: {e}")
             return []
